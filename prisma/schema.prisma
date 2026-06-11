@@ -1,0 +1,290 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StaffRole {
+  OWNER
+  WAITER
+  KITCHEN
+  CASHIER
+}
+
+enum SessionStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum StartedByType {
+  CUSTOMER
+  WAITER
+}
+
+enum KitchenStatus {
+  PENDING
+  BEING_PREPARED
+  SERVED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+}
+
+enum PaymentMethod {
+  TELEBIRR
+  CASH
+}
+
+enum AssistanceStatus {
+  PENDING
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+model Restaurant {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  logoUrl        String?
+  primaryColor   String   @default("#F97316")
+  secondaryColor String   @default("#111827")
+  timezone       String   @default("Africa/Addis_Ababa")
+  currency       String   @default("ETB")
+  isActive       Boolean  @default(true)
+  taxPct         Decimal  @default(15)
+  servicePct     Decimal  @default(0)
+  manualOpen     Boolean?
+  openingHours   Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tables      Table[]
+  staff       Staff[]
+  categories  MenuCategory[]
+  ingredients Ingredient[]
+  auditLogs   AuditLog[]
+}
+
+model Table {
+  id           String  @id @default(cuid())
+  restaurantId String
+  number       Int
+  label        String
+  capacity     Int     @default(4)
+  qrToken      String  @unique
+  isActive     Boolean @default(true)
+
+  restaurant  Restaurant             @relation(fields: [restaurantId], references: [id])
+  sessions    Session[]
+  assignments StaffTableAssignment[]
+
+  @@unique([restaurantId, number])
+}
+
+model Staff {
+  id           String    @id @default(cuid())
+  restaurantId String
+  name         String
+  email        String
+  passwordHash String
+  role         StaffRole
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  restaurant  Restaurant             @relation(fields: [restaurantId], references: [id])
+  assignments StaffTableAssignment[]
+  auditLogs   AuditLog[]
+
+  @@unique([restaurantId, email])
+}
+
+model StaffTableAssignment {
+  id           String   @id @default(cuid())
+  staffId      String
+  tableId      String
+  shiftDate    DateTime
+  assignedById String?
+  createdAt    DateTime @default(now())
+
+  staff Staff @relation(fields: [staffId], references: [id])
+  table Table @relation(fields: [tableId], references: [id])
+
+  @@unique([staffId, tableId, shiftDate])
+}
+
+model MenuCategory {
+  id           String @id @default(cuid())
+  restaurantId String
+  sortOrder    Int
+  i18nKey      String
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  items      MenuItem[]
+}
+
+model MenuItem {
+  id                 String  @id @default(cuid())
+  categoryId         String
+  nameI18nKey        String
+  descriptionI18nKey String?
+  basePrice          Decimal
+  imageUrl           String?
+  manualAvailable    Boolean @default(true)
+  derivedAvailable   Boolean @default(true)
+
+  category   MenuCategory      @relation(fields: [categoryId], references: [id])
+  variants   MenuItemVariant[]
+  modifiers  MenuModifier[]
+  recipes    Recipe[]
+  orderItems OrderItem[]
+}
+
+model MenuItemVariant {
+  id          String  @id @default(cuid())
+  menuItemId  String
+  nameI18nKey String
+  priceDelta  Decimal @default(0)
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model MenuModifier {
+  id          String  @id @default(cuid())
+  menuItemId  String
+  nameI18nKey String
+  priceDelta  Decimal @default(0)
+  isRequired  Boolean @default(false)
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model Ingredient {
+  id                String  @id @default(cuid())
+  restaurantId      String
+  name              String
+  stock             Decimal
+  unit              String
+  lowStockThreshold Decimal
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  recipes    Recipe[]
+}
+
+model Recipe {
+  id             String  @id @default(cuid())
+  menuItemId     String
+  ingredientId   String
+  quantityNeeded Decimal
+
+  menuItem   MenuItem   @relation(fields: [menuItemId], references: [id])
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+}
+
+model Session {
+  id               String        @id @default(cuid())
+  tableId          String
+  status           SessionStatus @default(ACTIVE)
+  startedByType    StartedByType
+  startedByStaffId String?
+  deviceTokenHash  String?
+  startedAt        DateTime      @default(now())
+  endedAt          DateTime?
+  closedByStaffId  String?
+
+  table       Table                     @relation(fields: [tableId], references: [id])
+  orders      Order[]
+  payment     Payment?
+  assistance  WaiterAssistanceRequest[]
+}
+
+model Order {
+  id             String   @id @default(cuid())
+  sessionId      String
+  orderNumber    Int
+  takenByStaffId String?
+  createdAt      DateTime @default(now())
+
+  session Session     @relation(fields: [sessionId], references: [id])
+  items   OrderItem[]
+}
+
+model OrderItem {
+  id                 String        @id @default(cuid())
+  orderId            String
+  menuItemId         String
+  variantId          String?
+  quantity           Int
+  unitPrice          Decimal
+  modifiersJson      Json
+  notes              String?
+  kitchenStatus      KitchenStatus @default(PENDING)
+  cancelledAt        DateTime?
+  cancelledByStaffId String?
+  cancelReason       String?
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  sessionId     String        @unique
+  status        PaymentStatus @default(UNPAID)
+  subtotal      Decimal
+  serviceCharge Decimal
+  tax           Decimal
+  totalDue      Decimal
+  totalPaid     Decimal       @default(0)
+
+  session      Session              @relation(fields: [sessionId], references: [id])
+  transactions PaymentTransaction[]
+}
+
+model PaymentTransaction {
+  id                String        @id @default(cuid())
+  paymentId         String
+  amount            Decimal
+  method            PaymentMethod
+  status            String
+  telebirrRef       String?
+  telebirrStatus    String?
+  cashTendered      Decimal?
+  recordedByStaffId String?
+  createdAt         DateTime      @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  restaurantId String
+  entityType   String
+  entityId     String
+  action       String
+  actorType    String
+  actorStaffId String?
+  payloadJson  Json
+  createdAt    DateTime @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  actorStaff Staff?     @relation(fields: [actorStaffId], references: [id])
+}
+
+model WaiterAssistanceRequest {
+  id                    String           @id @default(cuid())
+  sessionId             String?
+  tableId               String
+  deviceInfo            String?
+  status                AssistanceStatus @default(PENDING)
+  createdAt             DateTime         @default(now())
+  acknowledgedByStaffId String?
+
+  session Session? @relation(fields: [sessionId], references: [id])
+}
