@@ -9,7 +9,6 @@ export function useCustomerAssistance(
   tableId: string
 ) {
   const [status, setStatus] = useState<CustomerAssistanceStatus>("none");
-  const [waiterName, setWaiterName] = useState<string | null>(null);
   const [requestLoading, setRequestLoading] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -22,18 +21,15 @@ export function useCustomerAssistance(
       const json = (await response.json()) as {
         request: {
           status: "PENDING" | "ACKNOWLEDGED";
-          waiterName: string | null;
         } | null;
       };
 
       if (!json.request) {
         setStatus("none");
-        setWaiterName(null);
         return;
       }
 
       setStatus(json.request.status);
-      setWaiterName(json.request.waiterName);
     } catch {
       // Keep last known status on poll failure
     }
@@ -59,7 +55,6 @@ export function useCustomerAssistance(
       });
       if (!response.ok) return false;
       setStatus("PENDING");
-      setWaiterName(null);
       return true;
     } finally {
       setRequestLoading(false);
@@ -68,7 +63,6 @@ export function useCustomerAssistance(
 
   return {
     status,
-    waiterName,
     requestLoading,
     requestAssistance,
     refresh,

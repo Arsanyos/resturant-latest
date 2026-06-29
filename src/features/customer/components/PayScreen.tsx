@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppCard } from "@/components/shared/AppCard";
 import { Money } from "@/components/shared/Money";
 import { t, type SupportedLocale } from "@/lib/i18n";
+import { TipStep } from "./TipStep";
 
 const USSD_DELAY_MS = 1500;
+
+type PayPhase = "bill" | "tip" | "done";
 
 export function PayScreen({
   payment,
@@ -37,9 +40,79 @@ export function PayScreen({
   const [simulateFailure, setSimulateFailure] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [paid, setPaid] = useState(false);
+  const [phase, setPhase] = useState<PayPhase>(() =>
+    payment?.status === "PAID" ? "tip" : "bill"
+  );
+  const [tipEligible, setTipEligible] = useState<boolean | null>(null);
+  const [tipUnavailableReason, setTipUnavailableReason] = useState<
+    string | null
+  >(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [ussdSent, setUssdSent] = useState(false);
+  const [checkoutSessionId, setCheckoutSessionId] = useState<string | null>(
+    null
+  );
+
+  const activeSessionId = checkoutSessionId ?? sessionId;
+
+  useEffect(() => {
+    if (phase !== "done") return;
+    onSessionClosed?.();
+  }, [phase, onSessionClosed]);
+
+  useEffect(() => {
+    if (phase !== "tip") return;
+    if (!activeSessionId) {
+      setPhase("done");
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadAvailability(attempt = 0) {
+      const response = await fetch(
+        `/api/tips/availability?sessionId=${activeSessionId}`
+      );
+      const json = (response.ok ? await response.json() : null) as {
+        canTip?: boolean;
+        reason?: string;
+      } | null;
+
+      if (cancelled) return;
+
+      if (json?.canTip) {
+        setTipEligible(true);
+        setTipUnavailableReason(null);
+        return;
+      }
+
+      if (json?.reason === "payment_required" && attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        if (!cancelled) {
+          await loadAvailability(attempt + 1);
+        }
+        return;
+      }
+
+      if (json?.reason === "already_tipped") {
+        setPhase("done");
+        return;
+      }
+
+      setTipEligible(false);
+      if (json?.reason === "no_server") {
+        setTipUnavailableReason(t("customer.tip_no_server", locale));
+      } else {
+        setTipUnavailableReason(null);
+      }
+    }
+
+    void loadAvailability();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, activeSessionId, locale]);
 
   if (!payment) {
     return (
@@ -49,7 +122,7 @@ export function PayScreen({
     );
   }
 
-  if (paid || payment.status === "PAID") {
+  if (phase === "done") {
     return (
       <AppCard className="text-center">
         <p className="font-medium text-success">
@@ -59,6 +132,35 @@ export function PayScreen({
           {t("customer.pay_thank_you", locale)}
         </p>
       </AppCard>
+    );
+  }
+
+  if (phase === "tip") {
+    if (tipEligible === null) {
+      return (
+        <AppCard className="text-center text-muted-foreground">
+          {t("common.loading", locale)}
+        </AppCard>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <AppCard className="text-center">
+          <p className="font-medium text-success">
+            {t("customer.pay_success", locale)}
+          </p>
+        </AppCard>
+        <TipStep
+          sessionId={activeSessionId!}
+          subtotal={payment.subtotal}
+          currency={currency}
+          locale={locale}
+          canTip={tipEligible === true}
+          unavailableMessage={tipUnavailableReason}
+          onComplete={() => setPhase("done")}
+        />
+      </div>
     );
   }
 
@@ -94,7 +196,6 @@ export function PayScreen({
       const json = (await response.json()) as {
         success?: boolean;
         sessionClosed?: boolean;
-        message?: string;
         error?: string;
       };
 
@@ -103,8 +204,9 @@ export function PayScreen({
       }
 
       if (json.success && json.sessionClosed) {
-        setPaid(true);
-        onSessionClosed?.();
+        setCheckoutSessionId(sessionId);
+        setTipEligible(null);
+        setPhase("tip");
       } else if (json.success) {
         setMessage(t("customer.pay_partial_telebirr", locale));
       } else {

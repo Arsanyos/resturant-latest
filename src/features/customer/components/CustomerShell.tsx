@@ -192,7 +192,10 @@ export function CustomerShell({
             canPay={canPay}
             sessionId={sessionId}
             getToken={getToken}
-            onSessionClosed={onSessionClosed}
+            onSessionClosed={() => {
+              void refreshOrders();
+              onSessionClosed?.();
+            }}
           />
         )}
       </main>

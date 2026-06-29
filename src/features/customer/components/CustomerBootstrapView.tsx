@@ -107,7 +107,7 @@ export function CustomerBootstrapView({
           taxPct={data.restaurant.taxPct}
           servicePct={data.restaurant.servicePct}
           readOnly
-          onSessionClosed={() => void refresh()}
+          onSessionClosed={() => void refresh({ silent: true })}
         />
       </div>
     );
@@ -147,7 +147,7 @@ export function CustomerBootstrapView({
       getToken={getToken}
       taxPct={data.restaurant.taxPct}
       servicePct={data.restaurant.servicePct}
-      onSessionClosed={() => void refresh()}
+      onSessionClosed={() => void refresh({ silent: true })}
     />
   );
 }

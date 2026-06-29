@@ -21,9 +21,25 @@ type Settings = {
   secondaryColor: string;
 };
 
+async function uploadLogo(slug: string, file: File): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`/api/restaurants/${slug}/admin/logo`, {
+    method: "POST",
+    body: form,
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error ?? "Upload failed");
+  }
+  return json.url as string;
+}
+
 export function SettingsForm({ slug }: { slug: string }) {
   const { locale } = useLocale();
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -32,7 +48,10 @@ export function SettingsForm({ slug }: { slug: string }) {
     setLoading(true);
     const res = await fetch(`/api/restaurants/${slug}/admin/settings`);
     if (res.ok) {
-      setSettings(await res.json());
+      const data = await res.json();
+      setSettings(data);
+      setLogoFile(null);
+      setLogoPreview(data.logoUrl ?? null);
     }
     setLoading(false);
   }, [slug]);
@@ -45,17 +64,30 @@ export function SettingsForm({ slug }: { slug: string }) {
     if (!settings) return;
     setSaving(true);
     setMessage(null);
-    const res = await fetch(`/api/restaurants/${slug}/admin/settings`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setSettings(await res.json());
-      setMessage(t("admin.settings_saved", locale));
-    } else {
+    try {
+      let logoUrl = settings.logoUrl;
+      if (logoFile) {
+        logoUrl = await uploadLogo(slug, logoFile);
+      }
+
+      const res = await fetch(`/api/restaurants/${slug}/admin/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...settings, logoUrl }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSettings(data);
+        setLogoFile(null);
+        setLogoPreview(data.logoUrl ?? null);
+        setMessage(t("admin.settings_saved", locale));
+      } else {
+        setMessage(t("admin.error", locale));
+      }
+    } catch {
       setMessage(t("admin.error", locale));
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -75,20 +107,70 @@ export function SettingsForm({ slug }: { slug: string }) {
             onChange={(e) => setSettings({ ...settings, name: e.target.value })}
           />
         </label>
-        <label className="block">
-          <span className="text-sm text-muted-foreground">{t("admin.logo_url", locale)}</span>
-          <input
-            className="mt-1 w-full rounded-lg border border-card-border px-3 py-2 text-sm"
-            placeholder="https://"
-            value={settings.logoUrl ?? ""}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                logoUrl: e.target.value || null,
-              })
-            }
-          />
-        </label>
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-foreground">
+            {t("admin.brand_logo", locale)}
+          </p>
+          {(logoPreview || settings.logoUrl) ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoPreview ?? settings.logoUrl ?? ""}
+              alt=""
+              className="h-16 w-16 rounded-lg border border-card-border object-cover"
+            />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-card-border bg-muted text-lg font-semibold text-muted-foreground">
+              {settings.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <label className="block">
+            <span className="text-sm text-muted-foreground">
+              {t("admin.logo_upload", locale)}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="mt-1 w-full text-sm"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setLogoFile(file);
+                setLogoPreview(
+                  file ? URL.createObjectURL(file) : settings.logoUrl
+                );
+              }}
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-muted-foreground">
+              {t("admin.logo_url", locale)}
+            </span>
+            <input
+              className="mt-1 w-full rounded-lg border border-card-border px-3 py-2 text-sm"
+              placeholder="https://"
+              value={settings.logoUrl ?? ""}
+              onChange={(e) => {
+                const value = e.target.value || null;
+                setSettings({ ...settings, logoUrl: value });
+                if (!logoFile) {
+                  setLogoPreview(value);
+                }
+              }}
+            />
+          </label>
+          {settings.logoUrl || logoPreview ? (
+            <button
+              type="button"
+              className="text-sm text-muted-foreground underline"
+              onClick={() => {
+                setLogoFile(null);
+                setLogoPreview(null);
+                setSettings({ ...settings, logoUrl: null });
+              }}
+            >
+              {t("admin.remove_logo", locale)}
+            </button>
+          ) : null}
+        </div>
         <div className="space-y-3 border-t border-card-border pt-4">
           <p className="text-sm font-medium text-foreground">
             {t("admin.social_links", locale)}

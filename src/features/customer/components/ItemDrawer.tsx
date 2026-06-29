@@ -99,6 +99,8 @@ export function ItemDrawer({
     if (initialCartItem && onUpdate) {
       onUpdate(initialCartItem.localId, {
         ...initialCartItem,
+        name: item!.name,
+        imageUrl: item!.imageUrl,
         variantId: variant?.id,
         variantNameI18nKey: variant?.nameI18nKey,
         modifiers,

@@ -15,7 +15,7 @@ export function CustomerAssistanceActions({
   locale: SupportedLocale;
   sticky?: boolean;
 }) {
-  const { status, waiterName, requestLoading, requestAssistance } =
+  const { status, requestLoading, requestAssistance } =
     useCustomerAssistance(sessionId, tableId);
 
   if (!sessionId) return null;
@@ -31,12 +31,6 @@ export function CustomerAssistanceActions({
         <p className="font-medium text-success">
           {t("customer.assistance_acknowledged", locale)}
         </p>
-        {waiterName && (
-          <p className="mt-1 text-sm text-foreground">
-            {t("customer.assistance_waiter_name", locale)}:{" "}
-            <span className="font-semibold">{waiterName}</span>
-          </p>
-        )}
         <p className="mt-2 text-sm text-muted-foreground">
           {t("customer.assistance_acknowledged_hint", locale)}
         </p>

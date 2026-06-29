@@ -323,20 +323,10 @@ export async function getSessionAssistanceStatus(sessionId: string) {
     return { request: null };
   }
 
-  let waiterName: string | null = null;
-  if (request.acknowledgedByStaffId) {
-    const staff = await prisma.staff.findUnique({
-      where: { id: request.acknowledgedByStaffId },
-      select: { name: true },
-    });
-    waiterName = staff?.name ?? null;
-  }
-
   return {
     request: {
       id: request.id,
       status: request.status,
-      waiterName,
       createdAt: request.createdAt.toISOString(),
     },
   };

@@ -26,9 +26,10 @@ export class MenuUploadError extends Error {
   }
 }
 
-export async function saveMenuImage(
+async function saveRestaurantImage(
   restaurantId: string,
-  file: File
+  file: File,
+  kind: "menu" | "branding"
 ): Promise<string> {
   if (!ALLOWED_TYPES.has(file.type)) {
     throw new MenuUploadError("Only JPEG, PNG, WebP, and GIF images are allowed");
@@ -36,7 +37,7 @@ export async function saveMenuImage(
 
   const ext = EXT_BY_TYPE[file.type] ?? ".bin";
   const filename = `${randomBytes(16).toString("hex")}${ext}`;
-  const relativeDir = path.join("uploads", "menu", restaurantId);
+  const relativeDir = path.join("uploads", kind, restaurantId);
   const absoluteDir = path.join(process.cwd(), "public", relativeDir);
 
   await mkdir(absoluteDir, { recursive: true });
@@ -45,4 +46,18 @@ export async function saveMenuImage(
   await writeFile(path.join(absoluteDir, filename), buffer);
 
   return `/${relativeDir.replace(/\\/g, "/")}/${filename}`;
+}
+
+export async function saveMenuImage(
+  restaurantId: string,
+  file: File
+): Promise<string> {
+  return saveRestaurantImage(restaurantId, file, "menu");
+}
+
+export async function saveBrandLogo(
+  restaurantId: string,
+  file: File
+): Promise<string> {
+  return saveRestaurantImage(restaurantId, file, "branding");
 }

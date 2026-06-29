@@ -17,7 +17,11 @@ export default async function AdminRootLayout({
   }
 
   return (
-    <AdminLayout slug={slug} restaurantName={restaurant.name}>
+    <AdminLayout
+      slug={slug}
+      restaurantName={restaurant.name}
+      restaurantLogoUrl={restaurant.logoUrl}
+    >
       {children}
     </AdminLayout>
   );

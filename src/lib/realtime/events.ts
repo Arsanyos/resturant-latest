@@ -10,6 +10,7 @@ export const REALTIME_EVENTS = {
   PAYMENT_UPDATED: "payment.updated",
   PAYMENT_COMPLETED: "payment.completed",
   MENU_AVAILABILITY_CHANGED: "menu.availability_changed",
+  TIP_RECEIVED: "tip.received",
 } as const;
 
 export type RealtimeEventName =

@@ -63,6 +63,7 @@ export interface CartItem {
   localId: string;
   menuItemId: string;
   name: string;
+  imageUrl: string;
   variantId?: string;
   variantNameI18nKey?: string;
   quantity: number;

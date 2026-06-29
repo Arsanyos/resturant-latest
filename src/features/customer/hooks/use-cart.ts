@@ -31,6 +31,7 @@ export function useCart() {
         localId: newLocalId(),
         menuItemId: payload.menuItem.id,
         name: payload.menuItem.name,
+        imageUrl: payload.menuItem.imageUrl,
         variantId: payload.variantId,
         variantNameI18nKey: payload.variantNameI18nKey,
         quantity: payload.quantity,

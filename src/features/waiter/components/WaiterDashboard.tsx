@@ -2,6 +2,8 @@
 
 import { StaffRole } from "@prisma/client";
 import { useCallback, useEffect, useState } from "react";
+import { AppCard } from "@/components/shared/AppCard";
+import { Money } from "@/components/shared/Money";
 import { LanguageToggle } from "@/components/shared/LanguageToggle";
 import { RoleBadge } from "@/components/shared/RoleBadge";
 import { t } from "@/lib/i18n";
@@ -9,6 +11,7 @@ import { useLocale } from "@/lib/i18n/use-locale";
 import { useAssistanceRequests } from "../hooks/use-assistance-requests";
 import { useTableAssignments } from "../hooks/use-table-assignments";
 import { useWaiterTableDetail } from "../hooks/use-waiter-table-detail";
+import { useWaiterTips } from "../hooks/use-waiter-tips";
 import { AssistanceInbox } from "./AssistanceInbox";
 import { TableDetailPanel } from "./TableDetailPanel";
 import { TableGrid } from "./TableGrid";
@@ -40,6 +43,7 @@ export function WaiterDashboard({
     loading: detailLoading,
     refresh: refreshDetail,
   } = useWaiterTableDetail(slug, selectedTableId);
+  const { tipCount, tipTotal, currency: tipCurrency } = useWaiterTips(slug);
 
   useEffect(() => {
     void fetch("/api/auth/staff/me")
@@ -91,6 +95,20 @@ export function WaiterDashboard({
 
       <div className="grid min-w-0 gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)] lg:p-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
         <main className="min-w-0 space-y-4">
+          <AppCard className="flex flex-wrap items-center justify-between gap-3 border-primary/20 bg-primary/5">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t("waiter.tips_today", locale)}
+              </p>
+              <p className="text-2xl font-bold text-foreground">
+                <Money amount={tipTotal} currency={tipCurrency} />
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t("waiter.tips_count", locale).replace("{count}", String(tipCount))}
+            </p>
+          </AppCard>
+
           <h2 className="text-lg font-semibold text-foreground">
             {t("waiter.table_grid", locale)}
           </h2>

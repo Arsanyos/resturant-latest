@@ -45,7 +45,13 @@ export function CartView({
         {items.map((item) => (
           <AppCard key={item.localId}>
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={item.imageUrl}
+                alt=""
+                className="h-16 w-16 shrink-0 rounded-lg object-cover"
+              />
+              <div className="min-w-0 flex-1">
                 <p className="font-medium text-foreground">
                   {item.name}
                   {item.variantNameI18nKey && (
@@ -72,7 +78,7 @@ export function CartView({
               <Money
                 amount={item.unitPrice * item.quantity}
                 currency={currency}
-                className="shrink-0 text-sm font-semibold"
+                className="shrink-0 self-start text-sm font-semibold"
               />
             </div>
             <div className="mt-3 flex gap-2">

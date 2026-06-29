@@ -64,18 +64,34 @@ export function AdminSidebar({ slug }: { slug: string }) {
 
 export function AdminHeader({
   restaurantName,
+  restaurantLogoUrl,
   staffName,
 }: {
   restaurantName: string;
+  restaurantLogoUrl: string | null;
   staffName: string;
 }) {
   return (
     <header className="flex items-center justify-between border-b border-card-border bg-card px-6 py-4">
-      <div>
-        <h1 className="text-lg font-semibold text-foreground">{restaurantName}</h1>
-        {staffName ? (
-          <p className="text-sm text-muted-foreground">{staffName}</p>
-        ) : null}
+      <div className="flex items-center gap-3">
+        {restaurantLogoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={restaurantLogoUrl}
+            alt=""
+            className="h-10 w-10 rounded-lg object-cover"
+          />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+            {restaurantName.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">{restaurantName}</h1>
+          {staffName ? (
+            <p className="text-sm text-muted-foreground">{staffName}</p>
+          ) : null}
+        </div>
       </div>
       <RoleBadge role={StaffRole.OWNER} />
     </header>
@@ -85,10 +101,12 @@ export function AdminHeader({
 export function AdminLayout({
   slug,
   restaurantName,
+  restaurantLogoUrl,
   children,
 }: {
   slug: string;
   restaurantName: string;
+  restaurantLogoUrl: string | null;
   children: React.ReactNode;
 }) {
   const [staffName, setStaffName] = useState("");
@@ -105,7 +123,11 @@ export function AdminLayout({
     <div className="flex min-h-screen bg-background">
       <AdminSidebar slug={slug} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <AdminHeader restaurantName={restaurantName} staffName={staffName} />
+        <AdminHeader
+          restaurantName={restaurantName}
+          restaurantLogoUrl={restaurantLogoUrl}
+          staffName={staffName}
+        />
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
     </div>

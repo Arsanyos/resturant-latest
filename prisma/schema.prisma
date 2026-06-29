@@ -48,6 +48,12 @@ enum AssistanceStatus {
   RESOLVED
 }
 
+enum TipStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
 model Restaurant {
   id             String   @id @default(cuid())
   slug           String   @unique
@@ -106,6 +112,7 @@ model Staff {
   restaurant  Restaurant             @relation(fields: [restaurantId], references: [id])
   assignments StaffTableAssignment[]
   auditLogs   AuditLog[]
+  tips        Tip[]
 
   @@unique([restaurantId, email])
 }
@@ -208,6 +215,7 @@ model Session {
   table       Table                     @relation(fields: [tableId], references: [id])
   orders      Order[]
   payment     Payment?
+  tip         Tip?
   assistance  WaiterAssistanceRequest[]
 }
 
@@ -267,6 +275,19 @@ model PaymentTransaction {
   createdAt         DateTime      @default(now())
 
   payment Payment @relation(fields: [paymentId], references: [id])
+}
+
+model Tip {
+  id               String    @id @default(cuid())
+  sessionId        String    @unique
+  recipientStaffId String
+  amount           Decimal
+  status           TipStatus @default(PENDING)
+  telebirrRef      String?
+  createdAt        DateTime  @default(now())
+
+  session        Session @relation(fields: [sessionId], references: [id])
+  recipientStaff Staff   @relation(fields: [recipientStaffId], references: [id])
 }
 
 model AuditLog {
