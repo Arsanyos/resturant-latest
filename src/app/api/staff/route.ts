@@ -41,7 +41,10 @@ export async function POST(request: NextRequest) {
       );
     }
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues[0]?.message ?? "Invalid request" },
+        { status: 400 }
+      );
     }
     console.error("Staff POST error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
