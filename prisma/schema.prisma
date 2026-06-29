@@ -53,6 +53,11 @@ model Restaurant {
   slug           String   @unique
   name           String
   logoUrl        String?
+  instagramUrl   String?
+  facebookUrl    String?
+  tiktokUrl      String?
+  telegramUrl    String?
+  xUrl           String?
   primaryColor   String   @default("#F97316")
   secondaryColor String   @default("#111827")
   timezone       String   @default("Africa/Addis_Ababa")

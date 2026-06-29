@@ -10,6 +10,7 @@ import type { BootstrapData, CartItem, CustomerTab } from "../types";
 import { allItemsServed, hasOrderItems } from "../utils/order-grouping";
 import { AdSenseCarousel } from "./AdSenseCarousel";
 import { CartView } from "./CartView";
+import { CustomerFooter } from "./CustomerFooter";
 import { CustomerAssistanceActions } from "./CustomerAssistanceActions";
 import { MenuPage } from "./MenuPage";
 import { OrderStatusList } from "./OrderStatusList";
@@ -195,6 +196,20 @@ export function CustomerShell({
           />
         )}
       </main>
+
+      <CustomerFooter
+        restaurantName={data.restaurant.name}
+        restaurantLogoUrl={data.restaurant.logoUrl}
+        social={{
+          instagramUrl: data.restaurant.instagramUrl,
+          facebookUrl: data.restaurant.facebookUrl,
+          tiktokUrl: data.restaurant.tiktokUrl,
+          telegramUrl: data.restaurant.telegramUrl,
+          xUrl: data.restaurant.xUrl,
+        }}
+        locale={locale}
+        className={sessionId && !readOnly ? "pb-2" : undefined}
+      />
 
       {sessionId && !readOnly && (
         <footer className="sticky bottom-0 z-10 border-t border-card-border bg-background/95 px-4 py-3 backdrop-blur-sm">

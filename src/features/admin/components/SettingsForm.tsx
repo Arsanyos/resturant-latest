@@ -7,6 +7,12 @@ import { useLocale } from "@/lib/i18n/use-locale";
 
 type Settings = {
   name: string;
+  logoUrl: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  tiktokUrl: string | null;
+  telegramUrl: string | null;
+  xUrl: string | null;
   taxPct: number;
   servicePct: number;
   timezone: string;
@@ -69,6 +75,51 @@ export function SettingsForm({ slug }: { slug: string }) {
             onChange={(e) => setSettings({ ...settings, name: e.target.value })}
           />
         </label>
+        <label className="block">
+          <span className="text-sm text-muted-foreground">{t("admin.logo_url", locale)}</span>
+          <input
+            className="mt-1 w-full rounded-lg border border-card-border px-3 py-2 text-sm"
+            placeholder="https://"
+            value={settings.logoUrl ?? ""}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                logoUrl: e.target.value || null,
+              })
+            }
+          />
+        </label>
+        <div className="space-y-3 border-t border-card-border pt-4">
+          <p className="text-sm font-medium text-foreground">
+            {t("admin.social_links", locale)}
+          </p>
+          {(
+            [
+              ["instagramUrl", "admin.social_instagram"],
+              ["facebookUrl", "admin.social_facebook"],
+              ["tiktokUrl", "admin.social_tiktok"],
+              ["telegramUrl", "admin.social_telegram"],
+              ["xUrl", "admin.social_x"],
+            ] as const
+          ).map(([field, labelKey]) => (
+            <label key={field} className="block">
+              <span className="text-sm text-muted-foreground">
+                {t(labelKey, locale)}
+              </span>
+              <input
+                className="mt-1 w-full rounded-lg border border-card-border px-3 py-2 text-sm"
+                placeholder="https://"
+                value={settings[field] ?? ""}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    [field]: e.target.value || null,
+                  })
+                }
+              />
+            </label>
+          ))}
+        </div>
         <label className="block">
           <span className="text-sm text-muted-foreground">{t("admin.tax_pct", locale)}</span>
           <input

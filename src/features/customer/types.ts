@@ -37,6 +37,11 @@ export interface BootstrapData {
     slug: string;
     name: string;
     logoUrl: string | null;
+    instagramUrl: string | null;
+    facebookUrl: string | null;
+    tiktokUrl: string | null;
+    telegramUrl: string | null;
+    xUrl: string | null;
     primaryColor: string;
     secondaryColor: string;
     currency: string;

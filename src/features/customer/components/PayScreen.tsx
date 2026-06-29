@@ -5,6 +5,8 @@ import { AppCard } from "@/components/shared/AppCard";
 import { Money } from "@/components/shared/Money";
 import { t, type SupportedLocale } from "@/lib/i18n";
 
+const USSD_DELAY_MS = 1500;
+
 export function PayScreen({
   payment,
   currency,
@@ -36,6 +38,8 @@ export function PayScreen({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [ussdSent, setUssdSent] = useState(false);
 
   if (!payment) {
     return (
@@ -58,14 +62,18 @@ export function PayScreen({
     );
   }
 
+  const payAmount = payment.balance > 0 ? payment.balance : payment.totalDue;
+
   async function handleTelebirrPay() {
     if (!sessionId || !payment) return;
     setLoading(true);
     setError(null);
     setMessage(null);
+    setUssdSent(true);
+
+    await new Promise((resolve) => setTimeout(resolve, USSD_DELAY_MS));
 
     const billRef = `BOLE-${Date.now()}`;
-    const amount = payment.balance > 0 ? payment.balance : payment.totalDue;
 
     try {
       const token = getToken();
@@ -77,7 +85,7 @@ export function PayScreen({
         headers,
         body: JSON.stringify({
           paymentId: payment.id,
-          amount,
+          amount: payAmount,
           billRefNumber: billRef,
           simulateFailure,
         }),
@@ -106,7 +114,19 @@ export function PayScreen({
       setError(t("customer.pay_failed", locale));
     } finally {
       setLoading(false);
+      setUssdSent(false);
     }
+  }
+
+  function openConfirm() {
+    setError(null);
+    setMessage(null);
+    setConfirmOpen(true);
+  }
+
+  function confirmAndPay() {
+    setConfirmOpen(false);
+    void handleTelebirrPay();
   }
 
   return (
@@ -159,6 +179,7 @@ export function PayScreen({
               type="checkbox"
               checked={simulateFailure}
               onChange={(e) => setSimulateFailure(e.target.checked)}
+              disabled={loading}
             />
             {t("customer.pay_simulate_failure", locale)}
           </label>
@@ -166,13 +187,19 @@ export function PayScreen({
           <button
             type="button"
             disabled={loading}
-            onClick={() => void handleTelebirrPay()}
+            onClick={openConfirm}
             className="w-full rounded-pill bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
             {loading
               ? t("common.loading", locale)
               : t("customer.pay_telebirr", locale)}
           </button>
+
+          {ussdSent ? (
+            <p className="text-center text-sm font-medium text-primary">
+              {t("customer.pay_ussd_sent", locale)}
+            </p>
+          ) : null}
 
           {message && (
             <p className="text-center text-sm text-warning">{message}</p>
@@ -182,6 +209,41 @@ export function PayScreen({
           )}
         </AppCard>
       )}
+
+      {confirmOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <AppCard className="w-full max-w-sm">
+            <h3 className="text-lg font-semibold text-foreground">
+              {t("customer.pay_confirm_title", locale)}
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t("customer.pay_confirm_body", locale)}
+            </p>
+            <p className="mt-3 text-2xl font-bold text-foreground">
+              <Money amount={payAmount} currency={currency} />
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {t("customer.pay_confirm_hint", locale)}
+            </p>
+            <div className="mt-6 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                className="flex-1 rounded-pill border border-card-border px-4 py-2.5 text-sm font-medium"
+              >
+                {t("customer.pay_confirm_cancel", locale)}
+              </button>
+              <button
+                type="button"
+                onClick={confirmAndPay}
+                className="flex-1 rounded-pill bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+              >
+                {t("customer.pay_confirm_proceed", locale)}
+              </button>
+            </div>
+          </AppCard>
+        </div>
+      ) : null}
     </div>
   );
 }

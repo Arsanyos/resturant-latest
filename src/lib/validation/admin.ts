@@ -12,6 +12,11 @@ export const updateSettingsSchema = z.object({
   openingHours: z.record(
     z.object({ open: z.string(), close: z.string() })
   ).optional(),
+  instagramUrl: z.string().url().nullable().optional(),
+  facebookUrl: z.string().url().nullable().optional(),
+  tiktokUrl: z.string().url().nullable().optional(),
+  telegramUrl: z.string().url().nullable().optional(),
+  xUrl: z.string().url().nullable().optional(),
 });
 
 export const auditLogQuerySchema = z.object({

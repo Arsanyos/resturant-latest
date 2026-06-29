@@ -19,13 +19,20 @@ async function main() {
 
   const restaurant = await prisma.restaurant.upsert({
     where: { slug: "bole-cafe" },
-    update: {},
+    update: {
+      instagramUrl: "https://instagram.com",
+      facebookUrl: "https://facebook.com",
+      telegramUrl: "https://t.me",
+    },
     create: {
       slug: "bole-cafe",
       name: "Bole Cafe",
       primaryColor: "#F97316",
       secondaryColor: "#111827",
       openingHours: DEFAULT_OPENING_HOURS,
+      instagramUrl: "https://instagram.com",
+      facebookUrl: "https://facebook.com",
+      telegramUrl: "https://t.me",
     },
   });
 
