@@ -3,7 +3,7 @@ import type { KitchenWindow } from "@/lib/validation/order";
 
 export interface KdsOrderItem {
   orderItemId: string;
-  nameI18nKey: string;
+  name: string;
   quantity: number;
   variantNameI18nKey: string | null;
   modifiers: Array<{ nameI18nKey: string; priceDelta: number }>;

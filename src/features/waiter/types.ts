@@ -58,7 +58,7 @@ export interface WaiterTableDetail {
       items: Array<{
         id: string;
         menuItemId: string;
-        nameI18nKey: string;
+        name: string;
         quantity: number;
         unitPrice: number;
         kitchenStatus: string;

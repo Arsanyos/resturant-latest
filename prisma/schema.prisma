@@ -120,24 +120,26 @@ model StaffTableAssignment {
 }
 
 model MenuCategory {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   restaurantId String
   sortOrder    Int
-  i18nKey      String
+  name         String
+  imageUrl     String?
+  isActive     Boolean @default(true)
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id])
   items      MenuItem[]
 }
 
 model MenuItem {
-  id                 String  @id @default(cuid())
-  categoryId         String
-  nameI18nKey        String
-  descriptionI18nKey String?
-  basePrice          Decimal
-  imageUrl           String?
-  manualAvailable    Boolean @default(true)
-  derivedAvailable   Boolean @default(true)
+  id               String  @id @default(cuid())
+  categoryId       String
+  name             String
+  description      String?
+  basePrice        Decimal
+  imageUrl         String
+  manualAvailable  Boolean @default(true)
+  derivedAvailable Boolean @default(true)
 
   category   MenuCategory      @relation(fields: [categoryId], references: [id])
   variants   MenuItemVariant[]

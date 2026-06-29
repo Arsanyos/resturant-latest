@@ -1,6 +1,6 @@
 export interface OrderItemView {
   id: string;
-  nameI18nKey: string;
+  name: string;
   quantity: number;
   unitPrice: number;
   kitchenStatus: string;

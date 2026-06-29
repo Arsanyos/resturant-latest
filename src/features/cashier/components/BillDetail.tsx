@@ -87,7 +87,7 @@ export function BillDetail({
               >
                 <div>
                   <span>
-                    {t(item.nameI18nKey, locale)} × {item.quantity}
+                    {item.name} × {item.quantity}
                   </span>
                   {item.notes && (
                     <p className="text-xs text-muted-foreground">{item.notes}</p>

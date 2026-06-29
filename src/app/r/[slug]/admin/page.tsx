@@ -1,11 +1,17 @@
-import { t } from "@/lib/i18n";
+import { DashboardSummary } from "@/features/admin/components/DashboardSummary";
+import { getRestaurantBySlug } from "@/lib/restaurants/queries";
+import { notFound } from "next/navigation";
 
-export default function AdminPage() {
+export default async function AdminPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const restaurant = await getRestaurantBySlug(slug);
+  if (!restaurant) notFound();
+
   return (
-    <div className="min-h-screen bg-background p-6">
-      <h1 className="text-2xl font-bold text-foreground">
-        {t("admin.title")}
-      </h1>
-    </div>
+    <DashboardSummary slug={slug} currency={restaurant.currency} />
   );
 }

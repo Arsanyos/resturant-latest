@@ -49,7 +49,7 @@ export function CustomerShell({
 
   const cart = useCart();
   const sessionId = data.sessionId;
-  const ordersEnabled = !!sessionId && data.sessionState === "active_same_device";
+  const ordersEnabled = !!sessionId && !readOnly;
 
   const { orders, payment, loading: ordersLoading, refresh: refreshOrders } =
     useOrders(sessionId, getToken, ordersEnabled);

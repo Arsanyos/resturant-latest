@@ -17,6 +17,7 @@ Use this file to drive Cursor implementation phase by phase. Do not jump ahead t
 9. Cashier billing and payment finalization.
 10. Admin operations.
 11. Polish, i18n, QA, and edge cases.
+12. Monetization build gaps (future; see Phase 9 below and `docs/10-monetization-pricing.md`).
 
 ## Phase 0: Scaffold
 
@@ -243,6 +244,37 @@ Done when:
 3. Customer sees waiter-opened message.
 4. Waiter places order.
 5. Kitchen receives order.
+
+## Phase 9: Monetization Build Gaps (Future)
+
+Reference: `docs/10-monetization-pricing.md`
+
+These features are sold (or planned to be sold) in the Professional and Premium tiers but are **not built yet**. Track them here so the sales packaging never promises more than the product ships. Until each item is delivered, the corresponding tier feature must be sold as a phased custom build, not a fixed-price commitment.
+
+| Gap | Sold in tier | Current state | Needed for |
+| --- | --- | --- | --- |
+| Real Telebirr integration | All (production payments) | Mock only (`/api/payments/telebirr/mock`) | Live in-production customer payments |
+| Sales reports | Professional, Premium | Not built (audit log + partial dashboard only) | "Monthly sales report" promise |
+| Advanced analytics / reporting dashboard | Premium | Not built | Premium "business analytics" |
+| Loyalty and rewards program | Premium | Not built | Premium loyalty/rewards |
+| Customer database management | Premium | Not built | Premium customer DB |
+| Marketing tools / customer engagement | Premium | Not built | Premium marketing/engagement |
+| Automated billing + self-serve multi-tenant onboarding | Platform (all tiers) | Not built ("SaaS super-admin not in Phase 1") | Charging customers without manual invoicing |
+
+Tasks (when prioritized):
+
+- Build real Telebirr payment integration to replace the mock flow.
+- Build sales reporting (per-day/week/month revenue, item mix) for Professional.
+- Build an advanced analytics dashboard for Premium.
+- Build loyalty/rewards and customer database for Premium.
+- Build marketing/customer-engagement tooling for Premium.
+- Build platform billing + tenant onboarding so monthly/setup fees are collected automatically instead of by manual invoice.
+
+Done when:
+
+- No tier in `docs/10-monetization-pricing.md` advertises a feature that is not shippable.
+- Premium can be sold at a fixed price (its features exist), or it remains explicitly custom-quote until then.
+- Recurring fees are billable without manual invoicing.
 
 ## Non-Goals for MVP
 

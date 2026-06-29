@@ -30,7 +30,7 @@ export async function loadSessionBillContext(sessionId: string) {
         orderBy: { orderNumber: "asc" },
         include: {
           items: {
-            include: { menuItem: { select: { nameI18nKey: true } } },
+            include: { menuItem: { select: { name: true } } },
           },
         },
       },

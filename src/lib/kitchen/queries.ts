@@ -14,7 +14,7 @@ export async function getActiveSessionsWithOrders(restaurantId: string) {
         include: {
           items: {
             include: {
-              menuItem: { select: { nameI18nKey: true } },
+              menuItem: { select: { name: true } },
             },
           },
         },
@@ -28,7 +28,7 @@ export async function getOrderItemWithContext(orderItemId: string) {
   return prisma.orderItem.findUnique({
     where: { id: orderItemId },
     include: {
-      menuItem: { select: { nameI18nKey: true } },
+      menuItem: { select: { name: true } },
       order: {
         include: {
           session: {

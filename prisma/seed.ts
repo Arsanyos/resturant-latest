@@ -74,18 +74,18 @@ async function main() {
   }
 
   const categories = [
-    { sortOrder: 1, i18nKey: "category.traditional" },
-    { sortOrder: 2, i18nKey: "category.grill_and_tibs" },
-    { sortOrder: 3, i18nKey: "category.pizza" },
-    { sortOrder: 4, i18nKey: "category.drinks" },
-    { sortOrder: 5, i18nKey: "category.coffee" },
+    { sortOrder: 1, name: "Traditional" },
+    { sortOrder: 2, name: "Grill and Tibs" },
+    { sortOrder: 3, name: "Pizza" },
+    { sortOrder: 4, name: "Drinks" },
+    { sortOrder: 5, name: "Coffee" },
   ];
 
   const categoryMap: Record<string, string> = {};
 
   for (const cat of categories) {
     const existing = await prisma.menuCategory.findFirst({
-      where: { restaurantId: restaurant.id, i18nKey: cat.i18nKey },
+      where: { restaurantId: restaurant.id, name: cat.name },
     });
 
     const record =
@@ -94,18 +94,20 @@ async function main() {
         data: {
           restaurantId: restaurant.id,
           sortOrder: cat.sortOrder,
-          i18nKey: cat.i18nKey,
+          name: cat.name,
         },
       }));
 
-    categoryMap[cat.i18nKey] = record.id;
+    categoryMap[cat.name] = record.id;
   }
+
+  const placeholderImage = "/images/menu-placeholder.svg";
 
   const menuItems = [
     {
-      categoryKey: "category.traditional",
-      nameI18nKey: "menu.doro_wat",
-      descriptionI18nKey: "menu.doro_wat_desc",
+      categoryName: "Traditional",
+      name: "Doro Wat",
+      description: "Spicy chicken stew with berbere sauce, served with injera.",
       basePrice: 380,
       modifiers: [
         { nameI18nKey: "modifier.extra_injera", priceDelta: 30 },
@@ -113,21 +115,21 @@ async function main() {
       ],
     },
     {
-      categoryKey: "category.traditional",
-      nameI18nKey: "menu.shiro",
-      descriptionI18nKey: "menu.shiro_desc",
+      categoryName: "Traditional",
+      name: "Shiro",
+      description: "Chickpea flour stew with spices.",
       basePrice: 220,
     },
     {
-      categoryKey: "category.grill_and_tibs",
-      nameI18nKey: "menu.kitfo",
-      descriptionI18nKey: "menu.kitfo_desc",
+      categoryName: "Grill and Tibs",
+      name: "Kitfo",
+      description: "Minced beef tartare with mitmita and niter kibbeh.",
       basePrice: 520,
     },
     {
-      categoryKey: "category.pizza",
-      nameI18nKey: "menu.margherita",
-      descriptionI18nKey: "menu.margherita_desc",
+      categoryName: "Pizza",
+      name: "Margherita Pizza",
+      description: "Tomato, mozzarella, and fresh basil.",
       basePrice: 350,
       variants: [
         { nameI18nKey: "variant.small", priceDelta: 0 },
@@ -136,9 +138,9 @@ async function main() {
       ],
     },
     {
-      categoryKey: "category.coffee",
-      nameI18nKey: "menu.macchiato",
-      descriptionI18nKey: "menu.macchiato_desc",
+      categoryName: "Coffee",
+      name: "Macchiato",
+      description: "Ethiopian espresso with a touch of steamed milk.",
       basePrice: 70,
     },
   ];
@@ -146,8 +148,8 @@ async function main() {
   for (const item of menuItems) {
     const existing = await prisma.menuItem.findFirst({
       where: {
-        categoryId: categoryMap[item.categoryKey],
-        nameI18nKey: item.nameI18nKey,
+        categoryId: categoryMap[item.categoryName],
+        name: item.name,
       },
     });
 
@@ -155,10 +157,11 @@ async function main() {
 
     const menuItem = await prisma.menuItem.create({
       data: {
-        categoryId: categoryMap[item.categoryKey],
-        nameI18nKey: item.nameI18nKey,
-        descriptionI18nKey: item.descriptionI18nKey,
+        categoryId: categoryMap[item.categoryName],
+        name: item.name,
+        description: item.description,
         basePrice: item.basePrice,
+        imageUrl: placeholderImage,
       },
     });
 
@@ -187,7 +190,72 @@ async function main() {
     }
   }
 
-  console.log("Seed complete: Bole Cafe with 12 tables, 4 staff, and menu items.");
+  const doroWat = await prisma.menuItem.findFirst({
+    where: {
+      name: "Doro Wat",
+      category: { restaurantId: restaurant.id },
+    },
+  });
+
+  const berbere = await prisma.ingredient.upsert({
+    where: {
+      id: "seed-berbere",
+    },
+    create: {
+      id: "seed-berbere",
+      restaurantId: restaurant.id,
+      name: "Berbere",
+      stock: 50,
+      unit: "kg",
+      lowStockThreshold: 5,
+    },
+    update: {},
+  });
+
+  const chicken = await prisma.ingredient.upsert({
+    where: {
+      id: "seed-chicken",
+    },
+    create: {
+      id: "seed-chicken",
+      restaurantId: restaurant.id,
+      name: "Chicken",
+      stock: 30,
+      unit: "kg",
+      lowStockThreshold: 3,
+    },
+    update: {},
+  });
+
+  if (doroWat) {
+    const existingBerbereRecipe = await prisma.recipe.findFirst({
+      where: { menuItemId: doroWat.id, ingredientId: berbere.id },
+    });
+    if (!existingBerbereRecipe) {
+      await prisma.recipe.create({
+        data: {
+          menuItemId: doroWat.id,
+          ingredientId: berbere.id,
+          quantityNeeded: 0.5,
+        },
+      });
+    }
+
+    const existingChickenRecipe = await prisma.recipe.findFirst({
+      where: { menuItemId: doroWat.id, ingredientId: chicken.id },
+    });
+    if (!existingChickenRecipe) {
+      await prisma.recipe.create({
+        data: {
+          menuItemId: doroWat.id,
+          ingredientId: chicken.id,
+          quantityNeeded: 1,
+        },
+      });
+    }
+  }
+
+  console.log("Seed complete: Bole Cafe with 12 tables, 4 staff, menu items, and ingredients.");
 }
 
 main()

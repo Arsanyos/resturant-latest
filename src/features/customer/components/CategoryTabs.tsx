@@ -1,6 +1,5 @@
 "use client";
 
-import { t, type SupportedLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { MenuCategory } from "../types";
 
@@ -8,12 +7,11 @@ export function CategoryTabs({
   categories,
   activeId,
   onChange,
-  locale,
 }: {
   categories: MenuCategory[];
   activeId: string;
   onChange: (id: string) => void;
-  locale: SupportedLocale;
+  locale?: string;
 }) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -29,7 +27,7 @@ export function CategoryTabs({
               : "bg-muted text-muted-foreground"
           )}
         >
-          {t(category.i18nKey, locale)}
+          {category.name}
         </button>
       ))}
     </div>

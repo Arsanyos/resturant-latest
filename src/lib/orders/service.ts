@@ -7,7 +7,6 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import type { StaffSessionData } from "@/lib/auth/session";
 import { computeIsOpen } from "@/lib/restaurants/service";
-import { verifyDeviceToken } from "@/lib/sessions/queries";
 import { recalculateSessionPayment } from "@/lib/payments/service";
 import { publishRealtimeEvent } from "@/lib/realtime/publisher";
 import { REALTIME_EVENTS } from "@/lib/realtime/events";
@@ -40,7 +39,7 @@ async function loadSessionForOrder(sessionId: string) {
 
 async function assertSessionAccess(
   session: NonNullable<Awaited<ReturnType<typeof loadSessionForOrder>>>,
-  deviceToken?: string,
+  _deviceToken?: string,
   staff?: StaffSessionData
 ) {
   if (session.status !== SessionStatus.ACTIVE) {
@@ -52,20 +51,6 @@ async function assertSessionAccess(
       throw new OrderError("Forbidden", 403);
     }
     await assertStaffCanMutateTable(staff, session.tableId);
-    return;
-  }
-
-  if (session.startedByType === StartedByType.CUSTOMER) {
-    if (!deviceToken) {
-      throw new OrderError("Device token required", 401);
-    }
-    const valid = await verifyDeviceToken(
-      deviceToken,
-      session.deviceTokenHash
-    );
-    if (!valid) {
-      throw new OrderError("Invalid device token", 403);
-    }
   }
 }
 
@@ -183,7 +168,7 @@ export async function placeOrder(
     where: { id: order.id },
     include: {
       items: {
-        include: { menuItem: { select: { nameI18nKey: true } } },
+        include: { menuItem: { select: { name: true } } },
       },
     },
   });
@@ -226,7 +211,7 @@ export async function listSessionOrders(
       orderBy: { orderNumber: "asc" },
       include: {
         items: {
-          include: { menuItem: { select: { nameI18nKey: true } } },
+          include: { menuItem: { select: { name: true } } },
         },
       },
     }),
@@ -241,7 +226,7 @@ export async function listSessionOrders(
       items: order.items.map((item) => ({
         id: item.id,
         menuItemId: item.menuItemId,
-        nameI18nKey: item.menuItem.nameI18nKey,
+        name: item.menuItem.name,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),
         kitchenStatus: item.kitchenStatus,
@@ -371,7 +356,7 @@ export async function cancelOrderItem(
   const item = await prisma.orderItem.findUnique({
     where: { id: orderItemId },
     include: {
-      menuItem: { select: { nameI18nKey: true } },
+      menuItem: { select: { name: true } },
       order: {
         include: {
           session: {
@@ -430,7 +415,7 @@ export async function cancelOrderItem(
           reason: input.reason,
           tableNumber,
           orderNumber: item.order.orderNumber,
-          nameI18nKey: item.menuItem.nameI18nKey,
+          name: item.menuItem.name,
         },
       },
     });
@@ -467,7 +452,7 @@ export async function reorderOrderItem(
   const source = await prisma.orderItem.findUnique({
     where: { id: input.sourceOrderItemId },
     include: {
-      menuItem: { select: { nameI18nKey: true } },
+      menuItem: { select: { name: true } },
       order: true,
     },
   });
@@ -518,7 +503,7 @@ export async function reorderOrderItem(
           newOrderId: created.id,
           reason: input.reason,
           tableNumber: session.table.number,
-          nameI18nKey: source.menuItem.nameI18nKey,
+          name: source.menuItem.name,
         },
       },
     });
@@ -532,7 +517,7 @@ export async function reorderOrderItem(
     where: { id: order.id },
     include: {
       items: {
-        include: { menuItem: { select: { nameI18nKey: true } } },
+        include: { menuItem: { select: { name: true } } },
       },
     },
   });

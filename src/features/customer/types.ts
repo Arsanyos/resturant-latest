@@ -15,10 +15,10 @@ export interface MenuVariant {
 
 export interface MenuItem {
   id: string;
-  nameI18nKey: string;
-  descriptionI18nKey: string | null;
+  name: string;
+  description: string | null;
   basePrice: number;
-  imageUrl: string | null;
+  imageUrl: string;
   variants: MenuVariant[];
   modifiers: MenuModifier[];
 }
@@ -26,7 +26,8 @@ export interface MenuItem {
 export interface MenuCategory {
   id: string;
   sortOrder: number;
-  i18nKey: string;
+  name: string;
+  imageUrl: string | null;
   items: MenuItem[];
 }
 
@@ -56,7 +57,7 @@ export interface BootstrapData {
 export interface CartItem {
   localId: string;
   menuItemId: string;
-  nameI18nKey: string;
+  name: string;
   variantId?: string;
   variantNameI18nKey?: string;
   quantity: number;

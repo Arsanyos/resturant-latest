@@ -52,7 +52,7 @@ export interface SessionBill {
     createdAt: string;
     items: Array<{
       id: string;
-      nameI18nKey: string;
+      name: string;
       quantity: number;
       unitPrice: number;
       kitchenStatus: string;

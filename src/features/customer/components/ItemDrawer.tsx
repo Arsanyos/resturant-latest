@@ -117,12 +117,10 @@ export function ItemDrawer({
       <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-card border border-card-border bg-card sm:rounded-card">
         <div className="flex items-start justify-between border-b border-card-border p-4">
           <div>
-            <h2 className="text-lg font-bold text-foreground">
-              {t(item.nameI18nKey, locale)}
-            </h2>
-            {item.descriptionI18nKey && (
+            <h2 className="text-lg font-bold text-foreground">{item.name}</h2>
+            {item.description && (
               <p className="mt-1 text-sm text-muted-foreground">
-                {t(item.descriptionI18nKey, locale)}
+                {item.description}
               </p>
             )}
           </div>

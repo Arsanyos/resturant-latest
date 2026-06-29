@@ -1,11 +1,10 @@
-import { t } from "@/lib/i18n";
+import { TableManager } from "@/features/admin/components/TableManager";
 
-export default function AdminTablesPage() {
-  return (
-    <div className="min-h-screen bg-background p-6">
-      <h1 className="text-2xl font-bold text-foreground">
-        {t("admin.tables")}
-      </h1>
-    </div>
-  );
+export default async function AdminTablesPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  return <TableManager slug={slug} />;
 }

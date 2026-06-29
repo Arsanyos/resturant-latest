@@ -22,7 +22,7 @@ export async function getTableByRestaurantAndNumber(
 
 export async function getMenuForBootstrap(restaurantId: string) {
   const categories = await prisma.menuCategory.findMany({
-    where: { restaurantId },
+    where: { restaurantId, isActive: true },
     orderBy: { sortOrder: "asc" },
     include: {
       items: {
@@ -43,11 +43,12 @@ export async function getMenuForBootstrap(restaurantId: string) {
     .map((category) => ({
       id: category.id,
       sortOrder: category.sortOrder,
-      i18nKey: category.i18nKey,
+      name: category.name,
+      imageUrl: category.imageUrl,
       items: category.items.map((item) => ({
         id: item.id,
-        nameI18nKey: item.nameI18nKey,
-        descriptionI18nKey: item.descriptionI18nKey,
+        name: item.name,
+        description: item.description,
         basePrice: Number(item.basePrice),
         imageUrl: item.imageUrl,
         variants: item.variants.map((v) => ({

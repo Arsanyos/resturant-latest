@@ -47,7 +47,7 @@ export function CartView({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-medium text-foreground">
-                  {t(item.nameI18nKey, locale)}
+                  {item.name}
                   {item.variantNameI18nKey && (
                     <span className="text-muted-foreground">
                       {" "}

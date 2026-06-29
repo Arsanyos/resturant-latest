@@ -6,7 +6,6 @@ import { useDeviceToken } from "@/lib/auth/use-device-token";
 import { useLocale } from "@/lib/i18n/use-locale";
 import { t } from "@/lib/i18n";
 import { useSessionStatus } from "../hooks/use-session-status";
-import { BlockedDeviceScreen } from "./BlockedDeviceScreen";
 import { CustomerShell } from "./CustomerShell";
 import { WaiterSessionMessage } from "./WaiterSessionMessage";
 
@@ -89,16 +88,6 @@ export function CustomerBootstrapView({
           {t("customer.closed", locale)}
         </p>
       </AppCard>
-    );
-  }
-
-  if (data.sessionState === "active_blocked_device") {
-    return (
-      <BlockedDeviceScreen
-        sessionId={data.sessionId}
-        tableId={data.table.id}
-        locale={locale}
-      />
     );
   }
 

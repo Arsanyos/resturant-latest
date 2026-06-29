@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const orderModifierSchema = z.object({
   modifierId: z.string().min(1),
-  nameI18nKey: z.string().min(1),
+  name: z.string().min(1),
   priceDelta: z.number(),
 });
 

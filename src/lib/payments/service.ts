@@ -213,7 +213,7 @@ export async function buildSessionBill(sessionId: string) {
       items: order.items.map((item) => ({
         id: item.id,
         menuItemId: item.menuItemId,
-        nameI18nKey: item.menuItem.nameI18nKey,
+        name: item.menuItem.name,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),
         kitchenStatus: item.kitchenStatus,

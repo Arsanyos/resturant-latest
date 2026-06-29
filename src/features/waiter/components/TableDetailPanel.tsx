@@ -197,7 +197,7 @@ export function TableDetailPanel({
                       >
                         <div className="flex items-start justify-between gap-2">
                           <span className="text-sm">
-                            {t(item.nameI18nKey, locale)} × {item.quantity}
+                            {item.name} × {item.quantity}
                           </span>
                           <StatusChip
                             status={item.kitchenStatus as KitchenStatus}

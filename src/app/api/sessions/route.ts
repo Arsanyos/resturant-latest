@@ -33,12 +33,6 @@ export async function POST(request: NextRequest) {
       sessionState: "active_same_device" as const,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "TABLE_HAS_ACTIVE_SESSION") {
-      return NextResponse.json(
-        { error: "Table already has an active session" },
-        { status: 409 }
-      );
-    }
     if (error instanceof ZodError) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }

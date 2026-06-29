@@ -8,7 +8,7 @@ export async function getOrdersForSession(sessionId: string) {
       items: {
         include: {
           menuItem: {
-            select: { nameI18nKey: true },
+            select: { name: true },
           },
         },
       },

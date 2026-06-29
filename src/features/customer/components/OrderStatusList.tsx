@@ -54,7 +54,7 @@ export function OrderStatusList({
               >
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    {t(item.nameI18nKey, locale)} × {item.quantity}
+                    {item.name} × {item.quantity}
                   </p>
                   {item.notes && (
                     <p className="text-xs italic text-muted-foreground">

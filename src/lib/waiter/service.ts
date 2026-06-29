@@ -402,7 +402,7 @@ export async function getWaiterTableDetail(
         orderBy: { orderNumber: "asc" },
         include: {
           items: {
-            include: { menuItem: { select: { nameI18nKey: true } } },
+            include: { menuItem: { select: { name: true } } },
           },
         },
       },
@@ -433,7 +433,7 @@ export async function getWaiterTableDetail(
             items: order.items.map((item) => ({
               id: item.id,
               menuItemId: item.menuItemId,
-              nameI18nKey: item.menuItem.nameI18nKey,
+              name: item.menuItem.name,
               quantity: item.quantity,
               unitPrice: Number(item.unitPrice),
               kitchenStatus: item.kitchenStatus,

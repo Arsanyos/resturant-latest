@@ -11,9 +11,8 @@ function formatActivityLine(entry: ActivityEntry, locale: SupportedLocale): stri
   });
   const payload = entry.payload;
   const tableNumber = payload.tableNumber as number | undefined;
-  const nameI18nKey = payload.nameI18nKey as string | undefined;
+  const itemName = (payload.name as string | undefined) ?? "Item";
   const to = payload.to as string | undefined;
-  const itemName = nameI18nKey ? t(nameI18nKey, locale) : "Item";
 
   if (entry.action === "ORDER_ITEM_STATUS_CHANGED" && to) {
     const statusKey =

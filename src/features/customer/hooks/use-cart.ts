@@ -30,7 +30,7 @@ export function useCart() {
       const cartItem: CartItem = {
         localId: newLocalId(),
         menuItemId: payload.menuItem.id,
-        nameI18nKey: payload.menuItem.nameI18nKey,
+        name: payload.menuItem.name,
         variantId: payload.variantId,
         variantNameI18nKey: payload.variantNameI18nKey,
         quantity: payload.quantity,

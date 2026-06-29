@@ -30,7 +30,7 @@ export function OrderItemRow({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-semibold text-foreground">
-            {item.quantity}× {t(item.nameI18nKey, locale)}
+            {item.quantity}× {item.name}
           </p>
           {item.variantNameI18nKey && (
             <p className="text-xs text-muted-foreground">

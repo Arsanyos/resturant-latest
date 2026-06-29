@@ -78,7 +78,7 @@ export async function getKitchenOrders(slug: string, window: KitchenWindow) {
 
                 return {
                   orderItemId: item.id,
-                  nameI18nKey: item.menuItem.nameI18nKey,
+                  name: item.menuItem.name,
                   quantity: item.quantity,
                   variantNameI18nKey: await resolveVariantNameI18nKey(
                     item.variantId
@@ -145,7 +145,7 @@ export async function updateOrderItemStatus(
     const record = await tx.orderItem.update({
       where: { id: orderItemId },
       data: { kitchenStatus: nextStatus },
-      include: { menuItem: { select: { nameI18nKey: true } } },
+      include: { menuItem: { select: { name: true } } },
     });
 
     await tx.auditLog.create({
@@ -161,7 +161,7 @@ export async function updateOrderItemStatus(
           to: nextStatus,
           tableNumber,
           orderNumber,
-          nameI18nKey: item.menuItem.nameI18nKey,
+          name: item.menuItem.name,
         },
       },
     });
@@ -185,7 +185,7 @@ export async function updateOrderItemStatus(
   return {
     orderItemId: updated.id,
     kitchenStatus: updated.kitchenStatus,
-    nameI18nKey: updated.menuItem.nameI18nKey,
+    name: updated.menuItem.name,
   };
 }
 

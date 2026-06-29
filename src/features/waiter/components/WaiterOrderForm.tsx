@@ -102,7 +102,7 @@ export function WaiterOrderForm({
             {cart.items.map((item) => (
               <li key={item.localId} className="flex justify-between gap-2">
                 <span>
-                  {t(item.nameI18nKey, locale)} × {item.quantity}
+                  {item.name} × {item.quantity}
                 </span>
                 <Money
                   amount={item.unitPrice * item.quantity}
