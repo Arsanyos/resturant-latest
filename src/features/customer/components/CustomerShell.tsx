@@ -102,6 +102,7 @@ export function CustomerShell({
       <div className="sticky top-0 z-20 bg-background">
         <RestaurantHeader
           name={data.restaurant.name}
+          logoUrl={data.restaurant.logoUrl}
           tableLabel={data.table.label}
           locale={locale}
           onLocaleChange={onLocaleChange}

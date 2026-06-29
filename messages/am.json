@@ -87,7 +87,7 @@
   "customer.tip_confirm_title": "ቁራጭ ያረጋግጡ",
   "customer.tip_confirm_body": "ለሚከተለው መጠን ወደ ስልክዎ የዩኤስኤስዲ ጥያቄ ይላካል፡",
   "customer.tip_confirm_proceed": "ዩኤስኤስዲ ቁራጭ ላክ",
-  "customer.tip_thank_you": "ለግ generosityዎ እናመሰግናለን!",
+  "customer.tip_thank_you": "ለቸርነትዎ እናመሰግናለን!",
   "customer.tip_failed": "ቁራጭ ሊሰራ አልቻለም። እንደገና ሞክር ወይም ዝለል።",
   "customer.tip_no_server": "ለዚህ ጠረጴዛ አገልጋይ አልተመደበም — ቁራጭ አይቻልም።",
   "customer.pay_simulate_failure": "የቴሌብር ውድቀት ምሳሌ (ሙከራ)",
