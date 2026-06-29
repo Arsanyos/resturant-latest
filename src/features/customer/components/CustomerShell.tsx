@@ -8,6 +8,7 @@ import { useCart } from "../hooks/use-cart";
 import { useOrders } from "../hooks/use-orders";
 import type { BootstrapData, CartItem, CustomerTab } from "../types";
 import { allItemsServed, hasOrderItems } from "../utils/order-grouping";
+import { AdSenseCarousel } from "./AdSenseCarousel";
 import { CartView } from "./CartView";
 import { CustomerAssistanceActions } from "./CustomerAssistanceActions";
 import { MenuPage } from "./MenuPage";
@@ -97,35 +98,39 @@ export function CustomerShell({
 
   return (
     <div className="flex min-h-[calc(100vh-1rem)] flex-col">
-      <RestaurantHeader
-        name={data.restaurant.name}
-        tableLabel={data.table.label}
-        locale={locale}
-        onLocaleChange={onLocaleChange}
-      />
+      <div className="sticky top-0 z-20 bg-background">
+        <RestaurantHeader
+          name={data.restaurant.name}
+          tableLabel={data.table.label}
+          locale={locale}
+          onLocaleChange={onLocaleChange}
+        />
 
-      <nav className="sticky top-[65px] z-10 border-b border-card-border bg-background px-2 py-2">
-        <div className="flex gap-1">
-          {TABS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={cn(
-                "flex-1 rounded-pill px-2 py-2 text-xs font-medium sm:text-sm",
-                tab === key
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground"
-              )}
-            >
-              {t(TAB_KEYS[key], locale)}
-              {key === "cart" && cart.itemCount > 0 && (
-                <span className="ml-1">({cart.itemCount})</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </nav>
+        <AdSenseCarousel />
+
+        <nav className="border-b border-card-border bg-background px-2 py-2">
+          <div className="flex gap-1">
+            {TABS.map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                className={cn(
+                  "flex-1 rounded-pill px-2 py-2 text-xs font-medium sm:text-sm",
+                  tab === key
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground"
+                )}
+              >
+                {t(TAB_KEYS[key], locale)}
+                {key === "cart" && cart.itemCount > 0 && (
+                  <span className="ml-1">({cart.itemCount})</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
+      </div>
 
       <main className="flex-1 px-4 py-4">
         {toast && (
