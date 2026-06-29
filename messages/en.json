@@ -143,6 +143,8 @@
   "waiter.reorder_reason_prompt": "Reason for replacement",
   "waiter.reorder_failed": "Could not reorder item.",
   "waiter.close_panel": "Close",
+  "waiter.notify_new_session": "New guests at Table {table}",
+  "waiter.notify_assistance": "Assistance requested at Table {table}",
   "waiter.dismiss": "Dismiss",
   "waiter.telebirr_hint": "Hand the phone back to the customer before PIN entry.",
   "kitchen.title": "Kitchen KDS",

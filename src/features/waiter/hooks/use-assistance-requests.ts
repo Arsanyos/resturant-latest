@@ -47,10 +47,5 @@ export function useAssistanceRequests(slug: string, restaurantId: string) {
     onEvent: onRealtimeEvent,
   });
 
-  useEffect(() => {
-    const interval = setInterval(() => void refresh(true), 10000);
-    return () => clearInterval(interval);
-  }, [refresh]);
-
   return { requests, loading, error, refresh };
 }

@@ -3,6 +3,8 @@ import { ZodError } from "zod";
 import { createSessionSchema } from "@/lib/validation/session";
 import { resolveRestaurantBySlug } from "@/lib/restaurants/service";
 import { getTableByRestaurantAndNumber } from "@/lib/restaurants/queries";
+import { publishRealtimeEvent } from "@/lib/realtime/publisher";
+import { REALTIME_EVENTS } from "@/lib/realtime/events";
 import { createCustomerSession } from "@/lib/sessions/service";
 
 export async function POST(request: NextRequest) {
@@ -25,7 +27,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Table not found" }, { status: 404 });
     }
 
-    const { session, deviceToken } = await createCustomerSession(table.id);
+    const { session, deviceToken, isNew } = await createCustomerSession(
+      table.id
+    );
+
+    if (isNew) {
+      await publishRealtimeEvent({
+        event: REALTIME_EVENTS.SESSION_STARTED,
+        restaurantId: restaurant.id,
+        payload: {
+          sessionId: session.id,
+          tableId: table.id,
+          tableNumber: table.number,
+          restaurantId: restaurant.id,
+          startedByType: "CUSTOMER",
+        },
+      });
+    }
 
     return NextResponse.json({
       sessionId: session.id,

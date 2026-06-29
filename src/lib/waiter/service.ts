@@ -14,6 +14,7 @@ import type {
   AssistanceUpdateInput,
   StaffAssignmentInput,
 } from "@/lib/validation/waiter";
+import { ensureTableAssignment } from "./assignments";
 import { getShiftDate } from "./shift";
 import {
   getActiveSessionsByRestaurant,
@@ -198,58 +199,16 @@ export async function assignTable(
     action = "OWNER_ASSIGNED_TABLE";
   }
 
-  const shiftDate = getShiftDate();
-
-  const assignment = await prisma.staffTableAssignment.upsert({
-    where: {
-      staffId_tableId_shiftDate: {
-        staffId: targetStaffId,
-        tableId: input.tableId,
-        shiftDate,
-      },
-    },
-    create: {
-      staffId: targetStaffId,
-      tableId: input.tableId,
-      shiftDate,
+  const assignment = await ensureTableAssignment(
+    targetStaffId,
+    input.tableId,
+    {
       assignedById: input.staffId ? staff.staffId : null,
-    },
-    update: {
-      assignedById: input.staffId ? staff.staffId : undefined,
-    },
-    include: {
-      staff: { select: { id: true, name: true } },
-      table: { select: { id: true, number: true } },
-    },
-  });
-
-  await prisma.auditLog.create({
-    data: {
       restaurantId: staff.restaurantId,
-      entityType: "StaffTableAssignment",
-      entityId: assignment.id,
-      action,
-      actorType: "STAFF",
       actorStaffId: staff.staffId,
-      payloadJson: {
-        tableId: input.tableId,
-        tableNumber: table.number,
-        staffId: targetStaffId,
-        staffName: assignment.staff.name,
-      },
-    },
-  });
-
-  await publishRealtimeEvent({
-    event: REALTIME_EVENTS.TABLE_ASSIGNMENT_CHANGED,
-    restaurantId: staff.restaurantId,
-    payload: {
-      tableId: input.tableId,
-      tableNumber: table.number,
-      staffId: targetStaffId,
-      staffName: assignment.staff.name,
-    },
-  });
+      auditAction: action,
+    }
+  );
 
   return {
     id: assignment.id,
@@ -345,6 +304,17 @@ export async function updateAssistanceRequest(
 
     return record;
   });
+
+  if (
+    input.status === AssistanceStatus.ACKNOWLEDGED &&
+    staff.role === StaffRole.WAITER
+  ) {
+    await ensureTableAssignment(staff.staffId, request.tableId, {
+      restaurantId: staff.restaurantId,
+      actorStaffId: staff.staffId,
+      auditAction: "WAITER_ASSIGNED_ON_ASSISTANCE_ACK",
+    });
+  }
 
   await publishRealtimeEvent({
     event: REALTIME_EVENTS.ASSISTANCE_UPDATED,

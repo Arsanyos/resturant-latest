@@ -43,7 +43,7 @@ export function useKdsOrders(
       REALTIME_EVENTS.ORDER_ITEM_STATUS_CHANGED,
       REALTIME_EVENTS.SESSION_CLOSED,
     ],
-    onEvent: refresh,
+    onEvent: () => void refresh(),
   });
 
   useEffect(() => {

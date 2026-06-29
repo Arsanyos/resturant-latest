@@ -16,6 +16,7 @@ const TABLE_REALTIME_TOPICS = [
   REALTIME_EVENTS.ASSISTANCE_UPDATED,
   REALTIME_EVENTS.PAYMENT_UPDATED,
   REALTIME_EVENTS.PAYMENT_COMPLETED,
+  REALTIME_EVENTS.TIP_RECEIVED,
 ] as const;
 
 export function useTableAssignments(slug: string, restaurantId: string) {
@@ -50,11 +51,6 @@ export function useTableAssignments(slug: string, restaurantId: string) {
     topics: TABLE_REALTIME_TOPICS,
     onEvent: onRealtimeEvent,
   });
-
-  useEffect(() => {
-    const interval = setInterval(() => void refresh(true), 10000);
-    return () => clearInterval(interval);
-  }, [refresh]);
 
   return { data, loading, error, refresh };
 }

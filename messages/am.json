@@ -143,6 +143,8 @@
   "waiter.reorder_reason_prompt": "የመተካት ምክንያት",
   "waiter.reorder_failed": "እንደገና ትዕዛዝ አልተሳካም።",
   "waiter.close_panel": "ዝጋ",
+  "waiter.notify_new_session": "አዲስ እንግዶች በጠረጴዛ {table}",
+  "waiter.notify_assistance": "በጠረጴዛ {table} እገዛ ተጠይቋል",
   "waiter.dismiss": "ተው",
   "waiter.telebirr_hint": "PIN ከመግባት በፊት ስልኩን ለደንበኛው ይመልሱ።",
   "kitchen.title": "የወጥ ቤት KDS",

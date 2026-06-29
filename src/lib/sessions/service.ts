@@ -3,6 +3,7 @@ import { StartedByType, SessionStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import type { SessionState } from "@/lib/validation/session";
+import { getAssignedWaiterForTable } from "@/lib/waiter/assignments";
 import { getActiveSessionForTable } from "./queries";
 
 export function generateDeviceToken(): string {
@@ -37,11 +38,16 @@ export async function createCustomerSession(tableId: string) {
   const existing = await getActiveSessionForTable(tableId);
 
   if (existing) {
-    return { session: existing, deviceToken: generateDeviceToken() };
+    return {
+      session: existing,
+      deviceToken: generateDeviceToken(),
+      isNew: false,
+    };
   }
 
   const deviceToken = generateDeviceToken();
   const deviceTokenHash = await hashDeviceToken(deviceToken);
+  const assignedWaiterId = await getAssignedWaiterForTable(tableId);
 
   const session = await prisma.session.create({
     data: {
@@ -49,10 +55,11 @@ export async function createCustomerSession(tableId: string) {
       status: SessionStatus.ACTIVE,
       startedByType: StartedByType.CUSTOMER,
       deviceTokenHash,
+      ...(assignedWaiterId ? { startedByStaffId: assignedWaiterId } : {}),
     },
   });
 
-  return { session, deviceToken };
+  return { session, deviceToken, isNew: true };
 }
 
 export async function getSessionById(sessionId: string) {

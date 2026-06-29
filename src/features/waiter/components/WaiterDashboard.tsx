@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/use-locale";
 import { useAssistanceRequests } from "../hooks/use-assistance-requests";
 import { useTableAssignments } from "../hooks/use-table-assignments";
+import { useWaiterNotifications } from "../hooks/use-waiter-notifications";
 import { useWaiterTableDetail } from "../hooks/use-waiter-table-detail";
 import { useWaiterTips } from "../hooks/use-waiter-tips";
 import { AssistanceInbox } from "./AssistanceInbox";
@@ -31,6 +32,9 @@ export function WaiterDashboard({
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [staffName, setStaffName] = useState<string>("");
 
+  const { notification, dismiss: dismissNotification } =
+    useWaiterNotifications(restaurantId);
+
   const { data, loading, error, refresh: refreshTables } =
     useTableAssignments(slug, restaurantId);
   const {
@@ -42,8 +46,11 @@ export function WaiterDashboard({
     detail,
     loading: detailLoading,
     refresh: refreshDetail,
-  } = useWaiterTableDetail(slug, selectedTableId);
-  const { tipCount, tipTotal, currency: tipCurrency } = useWaiterTips(slug);
+  } = useWaiterTableDetail(slug, selectedTableId, restaurantId);
+  const { tipCount, tipTotal, currency: tipCurrency } = useWaiterTips(
+    slug,
+    restaurantId
+  );
 
   useEffect(() => {
     void fetch("/api/auth/staff/me")
@@ -92,6 +99,40 @@ export function WaiterDashboard({
           </div>
         </div>
       </header>
+
+      {notification && (
+        <div
+          className={`border-b px-4 py-3 lg:px-6 ${
+            notification.type === "assistance"
+              ? "border-warning/30 bg-warning/10"
+              : "border-primary/30 bg-primary/10"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p
+              className={`text-sm font-medium ${
+                notification.type === "assistance"
+                  ? "text-warning"
+                  : "text-primary"
+              }`}
+            >
+              {t(
+                notification.type === "assistance"
+                  ? "waiter.notify_assistance"
+                  : "waiter.notify_new_session",
+                locale
+              ).replace("{table}", String(notification.tableNumber))}
+            </p>
+            <button
+              type="button"
+              onClick={dismissNotification}
+              className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+            >
+              {t("waiter.dismiss", locale)}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid min-w-0 gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)] lg:p-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
         <main className="min-w-0 space-y-4">
