@@ -203,7 +203,20 @@ log "Syncing project files"
 rsync_to_remote
 
 log "Writing remote environment and service config"
-remote 'bash -s' <<EOF
+remote \
+  "APP_DIR='${APP_DIR}'" \
+  "APP_SYSTEM_USER='${APP_SYSTEM_USER}'" \
+  "DATABASE_URL='${DATABASE_URL}'" \
+  "SESSION_SECRET='${SESSION_SECRET}'" \
+  "WS_PORT='${WS_PORT}'" \
+  "PUBLIC_WS_URL='${PUBLIC_WS_URL}'" \
+  "APP_URL='${APP_URL}'" \
+  "NEXT_SERVICE_NAME='${NEXT_SERVICE_NAME}'" \
+  "WS_SERVICE_NAME='${WS_SERVICE_NAME}'" \
+  "NEXT_PORT='${NEXT_PORT}'" \
+  "NGINX_SITE_NAME='${NGINX_SITE_NAME}'" \
+  "APP_SERVER_NAME='${APP_SERVER_NAME}'" \
+  'bash -s' <<'EOF'
 set -euo pipefail
 
 cat > ${APP_DIR}/.env.production <<ENVVARS
