@@ -5,6 +5,7 @@ import { hashPassword } from "@/lib/auth/password";
 import type { PlatformSessionData } from "@/lib/auth/platform-session";
 import type {
   CreateTenantInput,
+  ResetTenantOwnerPasswordInput,
   UpdateTenantInput,
 } from "@/lib/validation/platform-tenant";
 
@@ -252,5 +253,71 @@ export async function updateTenant(
     tenantType: updated.tenantType,
     onboardingStatus: updated.onboardingStatus,
     isActive: updated.isActive,
+  };
+}
+
+export async function resetTenantOwnerPassword(
+  tenantId: string,
+  input: ResetTenantOwnerPasswordInput,
+  admin: PlatformSessionData
+) {
+  const tenant = await prisma.restaurant.findUnique({
+    where: { id: tenantId },
+    select: { id: true, slug: true, name: true },
+  });
+
+  if (!tenant) {
+    throw new PlatformTenantError("Tenant not found", 404);
+  }
+
+  const owner = await prisma.staff.findFirst({
+    where: {
+      restaurantId: tenantId,
+      role: StaffRole.OWNER,
+      isActive: true,
+    },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, name: true, email: true },
+  });
+
+  if (!owner) {
+    throw new PlatformTenantError("Tenant owner not found", 404);
+  }
+
+  const passwordHash = await hashPassword(input.newPassword);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.staff.update({
+      where: { id: owner.id },
+      data: { passwordHash },
+    });
+
+    await tx.platformAuditLog.create({
+      data: {
+        platformAdminId: admin.platformAdminId,
+        entityType: "Staff",
+        entityId: owner.id,
+        action: "PLATFORM_RESET_OWNER_PASSWORD",
+        payloadJson: {
+          tenantId: tenant.id,
+          tenantSlug: tenant.slug,
+          tenantName: tenant.name,
+          ownerEmail: owner.email,
+        },
+      },
+    });
+  });
+
+  return {
+    owner: {
+      id: owner.id,
+      name: owner.name,
+      email: owner.email,
+    },
+    tenant: {
+      id: tenant.id,
+      slug: tenant.slug,
+      name: tenant.name,
+    },
   };
 }

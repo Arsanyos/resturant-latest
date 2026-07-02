@@ -27,6 +27,11 @@ type TenantDetailData = {
     telegramUrl: string | null;
     xUrl: string | null;
     createdAt: string;
+    owner: {
+      id: string;
+      name: string;
+      email: string;
+    } | null;
   };
   metrics: {
     ordersToday: number;
@@ -205,7 +210,85 @@ function OverviewTab({ data }: { data: TenantDetailData }) {
             : "No activity yet"}
         </p>
       </AppCard>
+      <OwnerAccessCard tenantId={tenant.id} owner={tenant.owner} />
     </div>
+  );
+}
+
+function OwnerAccessCard({
+  tenantId,
+  owner,
+}: {
+  tenantId: string;
+  owner: TenantDetailData["tenant"]["owner"];
+}) {
+  const [newPassword, setNewPassword] = useState("password");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function resetPassword() {
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(
+        `/api/platform/tenants/${tenantId}/owner/reset-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newPassword }),
+        }
+      );
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(json.error ?? "Failed to reset owner password");
+        return;
+      }
+      setMessage("Owner password updated");
+      setNewPassword("password");
+    } catch {
+      setError("Something went wrong");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <AppCard className="space-y-4">
+      <div>
+        <h3 className="font-medium">Owner access</h3>
+        {owner ? (
+          <p className="text-sm text-muted-foreground">
+            {owner.name} · {owner.email}
+          </p>
+        ) : (
+          <p className="text-sm text-destructive">No active owner account found.</p>
+        )}
+      </div>
+
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+
+      <div className="flex flex-wrap gap-2">
+        <input
+          type="password"
+          className={`${inputClass} max-w-sm`}
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="Set temporary password"
+          disabled={!owner || saving}
+        />
+        <button
+          type="button"
+          disabled={!owner || saving}
+          onClick={() => resetPassword()}
+          className="rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+        >
+          {saving ? "Resetting..." : "Reset owner password"}
+        </button>
+      </div>
+    </AppCard>
   );
 }
 

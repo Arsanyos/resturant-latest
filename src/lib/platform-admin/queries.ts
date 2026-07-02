@@ -111,6 +111,14 @@ export async function listTenants() {
 export async function getTenantDetail(tenantId: string) {
   const tenant = await prisma.restaurant.findUnique({
     where: { id: tenantId },
+    include: {
+      staff: {
+        where: { role: "OWNER", isActive: true },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, name: true, email: true },
+        take: 1,
+      },
+    },
   });
 
   if (!tenant) {
@@ -209,6 +217,13 @@ export async function getTenantDetail(tenantId: string) {
       telegramUrl: tenant.telegramUrl,
       xUrl: tenant.xUrl,
       createdAt: tenant.createdAt.toISOString(),
+      owner: tenant.staff[0]
+        ? {
+            id: tenant.staff[0].id,
+            name: tenant.staff[0].name,
+            email: tenant.staff[0].email,
+          }
+        : null,
     },
     metrics: {
       ordersToday,

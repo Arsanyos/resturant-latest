@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
-import { verifyPassword } from "@/lib/auth/password";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { getStaffSession, StaffSessionData } from "@/lib/auth/session";
-import type { StaffLoginInput } from "@/lib/validation/staff";
+import type {
+  ChangeStaffPasswordInput,
+  StaffLoginInput,
+} from "@/lib/validation/staff";
 import { resolveRestaurantBySlug } from "@/lib/restaurants/service";
 
 export class AuthError extends Error {
@@ -94,5 +97,56 @@ export async function getCurrentStaff() {
     restaurantSlug: session.restaurantSlug,
     role: staff.role,
     name: staff.name,
+    email: staff.email,
   };
+}
+
+export async function changeCurrentStaffPassword(
+  input: ChangeStaffPasswordInput
+) {
+  const session = await getStaffSession();
+
+  if (!session.staffId || !session.restaurantId) {
+    throw new AuthError("Unauthorized", 401);
+  }
+
+  const staff = await prisma.staff.findFirst({
+    where: {
+      id: session.staffId,
+      restaurantId: session.restaurantId,
+      isActive: true,
+    },
+  });
+
+  if (!staff) {
+    throw new AuthError("Unauthorized", 401);
+  }
+
+  const valid = await verifyPassword(input.currentPassword, staff.passwordHash);
+  if (!valid) {
+    throw new AuthError("Current password is incorrect", 400);
+  }
+
+  const newPasswordHash = await hashPassword(input.newPassword);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.staff.update({
+      where: { id: staff.id },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        restaurantId: session.restaurantId,
+        entityType: "Staff",
+        entityId: staff.id,
+        action: "STAFF_CHANGED_OWN_PASSWORD",
+        actorType: "STAFF",
+        actorStaffId: staff.id,
+        payloadJson: {},
+      },
+    });
+  });
+
+  return { ok: true };
 }

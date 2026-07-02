@@ -68,3 +68,14 @@ export const updateTenantSchema = z.object({
 });
 
 export type UpdateTenantInput = z.infer<typeof updateTenantSchema>;
+
+export const resetTenantOwnerPasswordSchema = z.object({
+  newPassword: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .max(128, "Password is too long"),
+});
+
+export type ResetTenantOwnerPasswordInput = z.infer<
+  typeof resetTenantOwnerPasswordSchema
+>;
