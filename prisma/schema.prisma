@@ -14,6 +14,25 @@ enum StaffRole {
   CASHIER
 }
 
+enum PlatformAdminRole {
+  PLATFORM_ADMIN
+}
+
+enum TenantType {
+  RESTAURANT
+  CAFE
+  HOTEL
+  FOOD_CHAIN
+  OTHER
+}
+
+enum TenantStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
 enum SessionStatus {
   ACTIVE
   CLOSED
@@ -55,26 +74,30 @@ enum TipStatus {
 }
 
 model Restaurant {
-  id             String   @id @default(cuid())
-  slug           String   @unique
-  name           String
-  logoUrl        String?
-  instagramUrl   String?
-  facebookUrl    String?
-  tiktokUrl      String?
-  telegramUrl    String?
-  xUrl           String?
-  primaryColor   String   @default("#F97316")
-  secondaryColor String   @default("#111827")
-  timezone       String   @default("Africa/Addis_Ababa")
-  currency       String   @default("ETB")
-  isActive       Boolean  @default(true)
-  taxPct         Decimal  @default(15)
-  servicePct     Decimal  @default(0)
-  manualOpen     Boolean?
-  openingHours   Json
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String       @id @default(cuid())
+  slug             String       @unique
+  name             String
+  logoUrl          String?
+  instagramUrl     String?
+  facebookUrl      String?
+  tiktokUrl        String?
+  telegramUrl      String?
+  xUrl             String?
+  primaryColor     String       @default("#F97316")
+  secondaryColor   String       @default("#111827")
+  timezone         String       @default("Africa/Addis_Ababa")
+  currency         String       @default("ETB")
+  isActive         Boolean      @default(true)
+  taxPct           Decimal      @default(15)
+  servicePct       Decimal      @default(0)
+  manualOpen       Boolean?
+  openingHours     Json
+  tenantType       TenantType   @default(CAFE)
+  subscriptionPlan String?
+  onboardingStatus TenantStatus @default(ACTIVE)
+  notes            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   tables      Table[]
   staff       Staff[]
@@ -212,11 +235,11 @@ model Session {
   endedAt          DateTime?
   closedByStaffId  String?
 
-  table       Table                     @relation(fields: [tableId], references: [id])
-  orders      Order[]
-  payment     Payment?
-  tip         Tip?
-  assistance  WaiterAssistanceRequest[]
+  table      Table                     @relation(fields: [tableId], references: [id])
+  orders     Order[]
+  payment    Payment?
+  tip        Tip?
+  assistance WaiterAssistanceRequest[]
 }
 
 model Order {
@@ -315,4 +338,29 @@ model WaiterAssistanceRequest {
   acknowledgedByStaffId String?
 
   session Session? @relation(fields: [sessionId], references: [id])
+}
+
+model PlatformAdmin {
+  id           String            @id @default(cuid())
+  name         String
+  email        String            @unique
+  passwordHash String
+  role         PlatformAdminRole @default(PLATFORM_ADMIN)
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  auditLogs PlatformAuditLog[]
+}
+
+model PlatformAuditLog {
+  id              String   @id @default(cuid())
+  platformAdminId String
+  action          String
+  entityType      String
+  entityId        String
+  payloadJson     Json?
+  createdAt       DateTime @default(now())
+
+  platformAdmin PlatformAdmin @relation(fields: [platformAdminId], references: [id])
 }

@@ -17,6 +17,16 @@ const DEFAULT_OPENING_HOURS = {
 async function main() {
   const passwordHash = await bcrypt.hash("password", 10);
 
+  await prisma.platformAdmin.upsert({
+    where: { email: "admin@platform.test" },
+    update: {},
+    create: {
+      name: "Platform Admin",
+      email: "admin@platform.test",
+      passwordHash,
+    },
+  });
+
   const restaurant = await prisma.restaurant.upsert({
     where: { slug: "bole-cafe" },
     update: {
@@ -263,6 +273,7 @@ async function main() {
   }
 
   console.log("Seed complete: Bole Cafe with 12 tables, 4 staff, menu items, and ingredients.");
+  console.log("Platform admin: admin@platform.test / password");
 }
 
 main()
