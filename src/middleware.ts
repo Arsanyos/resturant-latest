@@ -56,7 +56,7 @@ async function handlePlatformRequest(
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.redirect(new URL("/platform/login", request.url));
+    return NextResponse.redirect(buildRedirectUrl(request, "/platform/login"));
   }
 
   return response;

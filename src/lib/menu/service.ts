@@ -181,10 +181,10 @@ export async function updateCategory(
   const category = await prisma.menuCategory.update({
     where: { id: categoryId },
     data: {
-      name: input.name,
-      sortOrder: input.sortOrder,
-      imageUrl: input.imageUrl,
-      isActive: input.isActive,
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),
+      ...(input.imageUrl !== undefined ? { imageUrl: input.imageUrl } : {}),
+      ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
     },
   });
 
@@ -406,12 +406,20 @@ export async function updateMenuItem(
     await tx.menuItem.update({
       where: { id: itemId },
       data: {
-        name: input.name,
-        description: input.description,
-        basePrice: input.basePrice,
-        imageUrl: input.imageUrl,
-        manualAvailable: input.manualAvailable,
-        categoryId: input.categoryId,
+        ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.description !== undefined
+          ? { description: input.description }
+          : {}),
+        ...(input.basePrice !== undefined
+          ? { basePrice: input.basePrice }
+          : {}),
+        ...(input.imageUrl !== undefined ? { imageUrl: input.imageUrl } : {}),
+        ...(input.manualAvailable !== undefined
+          ? { manualAvailable: input.manualAvailable }
+          : {}),
+        ...(input.categoryId !== undefined
+          ? { categoryId: input.categoryId }
+          : {}),
       },
     });
 
