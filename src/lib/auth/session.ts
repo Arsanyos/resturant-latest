@@ -9,12 +9,16 @@ export interface StaffSessionData {
   role: StaffRole;
 }
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const useSecureCookies =
+  process.env.NODE_ENV === "production" && appUrl?.startsWith("https://");
+
 export const sessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET!,
   cookieName: "staff_session",
   cookieOptions: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookies,
     sameSite: "lax",
     path: "/",
   },

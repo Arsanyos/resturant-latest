@@ -23,6 +23,20 @@ function extractSlug(pathname: string): string | null {
   return match?.[1] ?? null;
 }
 
+function buildRedirectUrl(request: NextRequest, pathname: string): URL {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const forwardedHost =
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+
+  if (forwardedHost) {
+    return new URL(
+      `${forwardedProto ?? request.nextUrl.protocol.replace(":", "")}://${forwardedHost}${pathname}`
+    );
+  }
+
+  return new URL(pathname, request.url);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -54,22 +68,18 @@ export async function middleware(request: NextRequest) {
 
   if (!session.staffId || !session.role) {
     if (slug) {
-      return NextResponse.redirect(
-        new URL(`/r/${slug}/staff`, request.url)
-      );
+      return NextResponse.redirect(buildRedirectUrl(request, `/r/${slug}/staff`));
     }
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(buildRedirectUrl(request, "/"));
   }
 
   if (slug && session.restaurantSlug !== slug) {
-    return NextResponse.redirect(
-      new URL(`/r/${slug}/staff`, request.url)
-    );
+    return NextResponse.redirect(buildRedirectUrl(request, `/r/${slug}/staff`));
   }
 
   if (!canActor(session.role, requiredAction)) {
     return NextResponse.redirect(
-      new URL(`/r/${slug ?? session.restaurantSlug}/staff`, request.url)
+      buildRedirectUrl(request, `/r/${slug ?? session.restaurantSlug}/staff`)
     );
   }
 
