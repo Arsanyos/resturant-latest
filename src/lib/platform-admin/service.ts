@@ -6,6 +6,7 @@ import type { PlatformSessionData } from "@/lib/auth/platform-session";
 import type {
   CreateTenantInput,
   ResetTenantOwnerPasswordInput,
+  UpdateTenantAdInput,
   UpdateTenantInput,
 } from "@/lib/validation/platform-tenant";
 
@@ -253,6 +254,61 @@ export async function updateTenant(
     tenantType: updated.tenantType,
     onboardingStatus: updated.onboardingStatus,
     isActive: updated.isActive,
+  };
+}
+
+export async function updateTenantAd(
+  tenantId: string,
+  input: UpdateTenantAdInput,
+  admin: PlatformSessionData
+) {
+  const existing = await prisma.restaurant.findUnique({
+    where: { id: tenantId },
+    select: { id: true, adImageUrl: true, adRedirectUrl: true },
+  });
+
+  if (!existing) {
+    throw new PlatformTenantError("Tenant not found", 404);
+  }
+
+  if (input.adImageUrl && !input.adRedirectUrl && !existing.adRedirectUrl) {
+    throw new PlatformTenantError(
+      "Redirect URL is required when an ad image is set",
+      400
+    );
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const record = await tx.restaurant.update({
+      where: { id: tenantId },
+      data: {
+        adImageUrl: input.adImageUrl,
+        adRedirectUrl: input.adRedirectUrl,
+      },
+    });
+
+    await tx.platformAuditLog.create({
+      data: {
+        platformAdminId: admin.platformAdminId,
+        entityType: "Restaurant",
+        entityId: tenantId,
+        action: "PLATFORM_UPDATED_TENANT_AD",
+        payloadJson: {
+          before: {
+            adImageUrl: existing.adImageUrl,
+            adRedirectUrl: existing.adRedirectUrl,
+          },
+          after: input as Record<string, unknown>,
+        } as Prisma.InputJsonValue,
+      },
+    });
+
+    return record;
+  });
+
+  return {
+    adImageUrl: updated.adImageUrl,
+    adRedirectUrl: updated.adRedirectUrl,
   };
 }
 

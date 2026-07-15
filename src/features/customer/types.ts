@@ -48,6 +48,8 @@ export interface BootstrapData {
     currency: string;
     taxPct: number;
     servicePct: number;
+    adImageUrl: string | null;
+    adRedirectUrl: string | null;
   };
   table: {
     id: string;

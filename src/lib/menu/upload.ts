@@ -29,7 +29,7 @@ export class MenuUploadError extends Error {
 async function saveRestaurantImage(
   restaurantId: string,
   file: File,
-  kind: "menu" | "branding"
+  kind: "menu" | "branding" | "ads"
 ): Promise<string> {
   if (!ALLOWED_TYPES.has(file.type)) {
     throw new MenuUploadError("Only JPEG, PNG, WebP, and GIF images are allowed");
@@ -60,4 +60,11 @@ export async function saveBrandLogo(
   file: File
 ): Promise<string> {
   return saveRestaurantImage(restaurantId, file, "branding");
+}
+
+export async function saveAdImage(
+  restaurantId: string,
+  file: File
+): Promise<string> {
+  return saveRestaurantImage(restaurantId, file, "ads");
 }

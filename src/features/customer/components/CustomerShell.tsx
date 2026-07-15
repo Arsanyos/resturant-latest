@@ -149,7 +149,10 @@ export function CustomerShell({
           onLocaleChange={onLocaleChange}
         />
 
-        <AdSenseCarousel />
+        <AdSenseCarousel
+          adImageUrl={data.restaurant.adImageUrl}
+          adRedirectUrl={data.restaurant.adRedirectUrl}
+        />
 
         <nav className="border-b border-card-border bg-background px-2 py-2">
           <div className="flex gap-1">
