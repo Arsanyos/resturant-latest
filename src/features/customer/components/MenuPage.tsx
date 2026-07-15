@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { SupportedLocale } from "@/lib/i18n";
 import type { BootstrapData, CartItem, MenuItem } from "../types";
 import { CategoryTabs } from "./CategoryTabs";
@@ -38,6 +38,23 @@ export function MenuPage({
       .flatMap((c) => c.items)
       .find((i) => i.id === editingCartItem.menuItemId);
 
+  const quickAddToCart = useCallback(
+    (item: MenuItem) => {
+      const needsOptions =
+        item.variants.length > 0 || item.modifiers.length > 0;
+      if (needsOptions) {
+        setSelectedItem(item);
+        return;
+      }
+      onAddToCart({
+        menuItem: item,
+        modifiers: [],
+        quantity: 1,
+      });
+    },
+    [onAddToCart]
+  );
+
   return (
     <div className="space-y-4">
       <CategoryTabs
@@ -55,6 +72,7 @@ export function MenuPage({
             currency={data.restaurant.currency}
             locale={locale}
             onSelect={setSelectedItem}
+            onAddToCart={quickAddToCart}
           />
         ))}
       </div>
