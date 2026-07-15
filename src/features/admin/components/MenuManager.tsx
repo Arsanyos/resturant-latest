@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AppCard } from "@/components/shared/AppCard";
+import { AvailabilityPill } from "@/components/shared/AvailabilityPill";
 import { Money } from "@/components/shared/Money";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/use-locale";
@@ -270,7 +271,7 @@ export function MenuManager() {
 
   async function toggleAvailability(item: MenuItem) {
     setSaving(true);
-    await fetch(`/api/menu/items/${item.id}`, {
+    await fetch(`/api/menu/items/${item.id}/availability`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ manualAvailable: !item.manualAvailable }),
@@ -440,17 +441,22 @@ export function MenuManager() {
                       className="h-14 w-14 shrink-0 rounded-lg object-cover"
                     />
                     <div className="min-w-0">
-                      <p className="font-medium">{item.name}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{item.name}</p>
+                        <AvailabilityPill
+                          available={
+                            item.manualAvailable && item.derivedAvailable
+                          }
+                          locale={locale}
+                        />
+                      </div>
                       {item.description ? (
                         <p className="mt-0.5 text-sm text-muted-foreground">
                           {item.description}
                         </p>
                       ) : null}
                       <p className="mt-1 text-sm text-muted-foreground">
-                        <Money amount={item.basePrice} /> ·{" "}
-                        {item.manualAvailable && item.derivedAvailable
-                          ? t("admin.menu_available", locale)
-                          : t("admin.menu_unavailable", locale)}
+                        <Money amount={item.basePrice} />
                       </p>
                       {item.modifiers.length > 0 ? (
                         <p className="mt-1 text-xs text-muted-foreground">

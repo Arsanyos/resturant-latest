@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RestaurantHeader } from "@/components/shared/RestaurantHeader";
 import { t, type SupportedLocale } from "@/lib/i18n";
+import { REALTIME_EVENTS } from "@/lib/realtime/events";
+import { useRealtime } from "@/lib/realtime/use-realtime";
 import { cn } from "@/lib/utils";
 import { useCart } from "../hooks/use-cart";
 import { useOrders } from "../hooks/use-orders";
-import type { BootstrapData, CartItem, CustomerTab } from "../types";
+import type {
+  BootstrapData,
+  CartItem,
+  CustomerTab,
+  MenuCategory,
+} from "../types";
 import { allItemsServed, hasOrderItems } from "../utils/order-grouping";
 import { AdSenseCarousel } from "./AdSenseCarousel";
 import { CartView } from "./CartView";
@@ -24,6 +31,19 @@ const TAB_KEYS: Record<CustomerTab, string> = {
   orders: "customer.tab.orders",
   pay: "customer.tab.pay",
 };
+
+function patchMenuAvailability(
+  menu: MenuCategory[],
+  menuItemId: string,
+  available: boolean
+): MenuCategory[] {
+  return menu.map((category) => ({
+    ...category,
+    items: category.items.map((item) =>
+      item.id === menuItemId ? { ...item, available } : item
+    ),
+  }));
+}
 
 export function CustomerShell({
   data,
@@ -48,6 +68,25 @@ export function CustomerShell({
   const [toast, setToast] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
+  const [menu, setMenu] = useState(data.menu);
+
+  useEffect(() => {
+    setMenu(data.menu);
+  }, [data.menu]);
+
+  useRealtime({
+    restaurantId: data.restaurant.id,
+    enabled: !!data.restaurant.id,
+    topics: [REALTIME_EVENTS.MENU_AVAILABILITY_CHANGED],
+    onEvent: (envelope) => {
+      const menuItemId = envelope.payload.menuItemId;
+      const available = envelope.payload.available;
+      if (typeof menuItemId !== "string" || typeof available !== "boolean") {
+        return;
+      }
+      setMenu((prev) => patchMenuAvailability(prev, menuItemId, available));
+    },
+  });
 
   const cart = useCart();
   const sessionId = data.sessionId;
@@ -55,6 +94,8 @@ export function CustomerShell({
 
   const { orders, payment, loading: ordersLoading, refresh: refreshOrders } =
     useOrders(sessionId, getToken, ordersEnabled);
+
+  const menuData: BootstrapData = { ...data, menu };
 
   async function handlePlaceOrder() {
     if (!sessionId || cart.items.length === 0) return;
@@ -143,7 +184,7 @@ export function CustomerShell({
 
         {tab === "menu" && (
           <MenuPage
-            data={data}
+            data={menuData}
             locale={locale}
             onAddToCart={readOnly ? () => {} : cart.addItem}
             onUpdateCartItem={readOnly ? undefined : cart.updateItem}

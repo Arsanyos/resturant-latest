@@ -40,6 +40,7 @@ export function MenuPage({
 
   const quickAddToCart = useCallback(
     (item: MenuItem) => {
+      if (!item.available) return;
       const needsOptions =
         item.variants.length > 0 || item.modifiers.length > 0;
       if (needsOptions) {

@@ -19,6 +19,7 @@ export interface MenuItem {
   description: string | null;
   basePrice: number;
   imageUrl: string;
+  available: boolean;
   variants: MenuVariant[];
   modifiers: MenuModifier[];
 }

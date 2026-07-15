@@ -13,6 +13,7 @@ import { WaiterOrderForm } from "./WaiterOrderForm";
 
 export function TableDetailPanel({
   slug,
+  restaurantId,
   detail,
   loading,
   locale,
@@ -21,6 +22,7 @@ export function TableDetailPanel({
   onClose,
 }: {
   slug: string;
+  restaurantId: string;
   detail: WaiterTableDetail | null;
   loading: boolean;
   locale: SupportedLocale;
@@ -34,7 +36,11 @@ export function TableDetailPanel({
   const [openingSession, setOpeningSession] = useState(false);
 
   const showOrderForm = detail?.canMutate && !!detail.session;
-  const { data: menuData } = useWaiterMenu(slug, !!showOrderForm);
+  const { data: menuData } = useWaiterMenu(
+    slug,
+    restaurantId,
+    !!showOrderForm
+  );
 
   if (!detail && !loading) return null;
 

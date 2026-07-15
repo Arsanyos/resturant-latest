@@ -38,4 +38,26 @@ export interface ActivityEntry {
   payload: Record<string, unknown>;
 }
 
+export type KitchenTab = "orders" | "menu";
+
+export interface KitchenMenuItem {
+  id: string;
+  name: string;
+  description: string | null;
+  imageUrl: string;
+  manualAvailable: boolean;
+  available: boolean;
+}
+
+export interface KitchenMenuCategory {
+  id: string;
+  sortOrder: number;
+  name: string;
+  items: KitchenMenuItem[];
+}
+
+export interface KitchenMenuData {
+  categories: KitchenMenuCategory[];
+}
+
 export type { KitchenWindow };

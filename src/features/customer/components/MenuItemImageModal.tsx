@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { AvailabilityPill } from "@/components/shared/AvailabilityPill";
 import { Money } from "@/components/shared/Money";
 import { t, type SupportedLocale } from "@/lib/i18n";
 import type { MenuItem } from "../types";
@@ -32,6 +33,7 @@ export function MenuItemImageModal({
     };
   }, [onClose]);
 
+  const available = item.available !== false;
   const variant = item.variants[0];
   const unitPrice = computeLineUnitPrice(
     item.basePrice,
@@ -40,6 +42,7 @@ export function MenuItemImageModal({
   );
 
   function handleAddToCart() {
+    if (!available) return;
     onAddToCart(item);
     onClose();
   }
@@ -76,12 +79,15 @@ export function MenuItemImageModal({
         </div>
 
         <div className="space-y-2 px-5 py-4">
-          <h2
-            id="menu-item-image-title"
-            className="text-xl font-semibold tracking-tight text-foreground"
-          >
-            {item.name}
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2
+              id="menu-item-image-title"
+              className="text-xl font-semibold tracking-tight text-foreground"
+            >
+              {item.name}
+            </h2>
+            <AvailabilityPill available={available} locale={locale} />
+          </div>
           {item.description ? (
             <p className="text-sm leading-relaxed text-muted-foreground">
               {item.description}
@@ -91,14 +97,20 @@ export function MenuItemImageModal({
             <Money amount={unitPrice} currency={currency} />
           </p>
 
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="mt-3 w-full rounded-pill bg-primary py-3 font-medium text-primary-foreground"
-          >
-            {t("customer.add_to_cart", locale)} —{" "}
-            <Money amount={unitPrice} currency={currency} />
-          </button>
+          {available ? (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="mt-3 w-full rounded-pill bg-primary py-3 font-medium text-primary-foreground"
+            >
+              {t("customer.add_to_cart", locale)} —{" "}
+              <Money amount={unitPrice} currency={currency} />
+            </button>
+          ) : (
+            <p className="mt-3 rounded-pill bg-muted px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+              {t("common.unavailable", locale)}
+            </p>
+          )}
         </div>
       </div>
     </div>

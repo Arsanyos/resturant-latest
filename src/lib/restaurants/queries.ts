@@ -26,10 +26,7 @@ export async function getMenuForBootstrap(restaurantId: string) {
     orderBy: { sortOrder: "asc" },
     include: {
       items: {
-        where: {
-          manualAvailable: true,
-          derivedAvailable: true,
-        },
+        orderBy: { name: "asc" },
         include: {
           variants: true,
           modifiers: true,
@@ -51,6 +48,7 @@ export async function getMenuForBootstrap(restaurantId: string) {
         description: item.description,
         basePrice: Number(item.basePrice),
         imageUrl: item.imageUrl,
+        available: item.manualAvailable && item.derivedAvailable,
         variants: item.variants.map((v) => ({
           id: v.id,
           nameI18nKey: v.nameI18nKey,

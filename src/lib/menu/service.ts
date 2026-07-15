@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import type { StaffSessionData } from "@/lib/auth/session";
+import { publishRealtimeEvent } from "@/lib/realtime/publisher";
+import { REALTIME_EVENTS } from "@/lib/realtime/events";
 import type { z } from "zod";
 import type {
   createCategorySchema,
@@ -455,7 +457,114 @@ export async function updateMenuItem(
     include: { variants: true, modifiers: true },
   });
 
+  if (
+    input.manualAvailable !== undefined &&
+    input.manualAvailable !== existing.manualAvailable &&
+    full
+  ) {
+    await publishRealtimeEvent({
+      event: REALTIME_EVENTS.MENU_AVAILABILITY_CHANGED,
+      restaurantId: staff.restaurantId,
+      payload: {
+        menuItemId: itemId,
+        available: full.manualAvailable && full.derivedAvailable,
+      },
+    });
+  }
+
   return serializeMenuItem(full!);
+}
+
+export async function setMenuItemAvailability(
+  itemId: string,
+  manualAvailable: boolean,
+  staff: StaffSessionData
+) {
+  const existing = await prisma.menuItem.findFirst({
+    where: {
+      id: itemId,
+      category: { restaurantId: staff.restaurantId },
+    },
+  });
+
+  if (!existing) {
+    throw new MenuError("Menu item not found", 404);
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const item = await tx.menuItem.update({
+      where: { id: itemId },
+      data: { manualAvailable },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        restaurantId: staff.restaurantId,
+        entityType: "MenuItem",
+        entityId: itemId,
+        action: "STAFF_UPDATED_MENU_AVAILABILITY",
+        actorType: "STAFF",
+        actorStaffId: staff.staffId,
+        payloadJson: { manualAvailable },
+      },
+    });
+
+    return item;
+  });
+
+  const available = updated.manualAvailable && updated.derivedAvailable;
+
+  await publishRealtimeEvent({
+    event: REALTIME_EVENTS.MENU_AVAILABILITY_CHANGED,
+    restaurantId: staff.restaurantId,
+    payload: {
+      menuItemId: itemId,
+      available,
+    },
+  });
+
+  return {
+    id: updated.id,
+    manualAvailable: updated.manualAvailable,
+    derivedAvailable: updated.derivedAvailable,
+    available,
+  };
+}
+
+export async function getKitchenMenu(restaurantId: string) {
+  const categories = await prisma.menuCategory.findMany({
+    where: { restaurantId, isActive: true },
+    orderBy: { sortOrder: "asc" },
+    include: {
+      items: {
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          imageUrl: true,
+          manualAvailable: true,
+          derivedAvailable: true,
+        },
+      },
+    },
+  });
+
+  return {
+    categories: categories.map((cat) => ({
+      id: cat.id,
+      sortOrder: cat.sortOrder,
+      name: cat.name,
+      items: cat.items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        imageUrl: item.imageUrl,
+        manualAvailable: item.manualAvailable,
+        available: item.manualAvailable && item.derivedAvailable,
+      })),
+    })),
+  };
 }
 
 export async function deleteMenuItem(itemId: string, staff: StaffSessionData) {
@@ -488,6 +597,17 @@ export async function deleteMenuItem(itemId: string, staff: StaffSessionData) {
       },
     });
   });
+
+  if (existing.manualAvailable) {
+    await publishRealtimeEvent({
+      event: REALTIME_EVENTS.MENU_AVAILABILITY_CHANGED,
+      restaurantId: staff.restaurantId,
+      payload: {
+        menuItemId: itemId,
+        available: false,
+      },
+    });
+  }
 
   return { id: itemId, manualAvailable: false };
 }

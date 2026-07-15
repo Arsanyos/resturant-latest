@@ -47,3 +47,7 @@ export const updateMenuItemSchema = z.object({
   categoryId: z.string().min(1).optional(),
   modifiers: z.array(menuModifierInputSchema).optional(),
 });
+
+export const setMenuItemAvailabilitySchema = z.object({
+  manualAvailable: z.boolean(),
+});

@@ -187,6 +187,7 @@ export function WaiterDashboard({
           <aside className="xl:col-span-1">
             <TableDetailPanel
               slug={slug}
+              restaurantId={restaurantId}
               detail={detail}
               loading={detailLoading}
               locale={locale}

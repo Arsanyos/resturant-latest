@@ -89,6 +89,19 @@ export function WaiterOrderForm({
             currency={menuData.currency}
             locale={locale}
             onSelect={setSelectedItem}
+            onAddToCart={(menuItem) => {
+              const needsOptions =
+                menuItem.variants.length > 0 || menuItem.modifiers.length > 0;
+              if (needsOptions) {
+                setSelectedItem(menuItem);
+                return;
+              }
+              cart.addItem({
+                menuItem,
+                modifiers: [],
+                quantity: 1,
+              });
+            }}
           />
         ))}
       </div>

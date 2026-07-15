@@ -1,9 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { REALTIME_EVENTS } from "@/lib/realtime/events";
+import { useRealtime } from "@/lib/realtime/use-realtime";
 import type { WaiterMenuData } from "../types";
 
-export function useWaiterMenu(slug: string, enabled: boolean) {
+export function useWaiterMenu(
+  slug: string,
+  restaurantId: string,
+  enabled: boolean
+) {
   const [data, setData] = useState<WaiterMenuData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +29,32 @@ export function useWaiterMenu(slug: string, enabled: boolean) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useRealtime({
+    restaurantId,
+    enabled: enabled && !!restaurantId,
+    topics: [REALTIME_EVENTS.MENU_AVAILABILITY_CHANGED],
+    onEvent: (envelope) => {
+      const menuItemId = envelope.payload.menuItemId;
+      const available = envelope.payload.available;
+      if (typeof menuItemId !== "string" || typeof available !== "boolean") {
+        void refresh();
+        return;
+      }
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          menu: prev.menu.map((category) => ({
+            ...category,
+            items: category.items.map((item) =>
+              item.id === menuItemId ? { ...item, available } : item
+            ),
+          })),
+        };
+      });
+    },
+  });
 
   return { data, loading, refresh };
 }
