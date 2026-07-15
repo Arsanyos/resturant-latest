@@ -45,46 +45,50 @@ export function MenuItemCard({
             className="h-16 w-16 object-cover transition hover:opacity-90"
           />
         </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (!available) return;
-            onSelect(item);
-          }}
-          disabled={!available}
-          className="flex min-w-0 flex-1 items-start gap-3 text-left disabled:cursor-not-allowed"
-        >
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-medium text-foreground">{item.name}</p>
-              <AvailabilityPill available={available} locale={locale} />
-            </div>
-            {item.description && (
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                {item.description}
-              </p>
-            )}
-            <div className="mt-2">
-              <Money
-                amount={item.basePrice}
-                currency={currency}
-                className="text-sm font-semibold"
-              />
-            </div>
-          </div>
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl font-bold",
-              available
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground"
-            )}
-            aria-hidden
+        <div className="flex flex-col w-full gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (!available) return;
+              onSelect(item);
+            }}
+            disabled={!available}
+            className="flex min-w-0 flex-1 items-start gap-3 text-left disabled:cursor-not-allowed"
           >
-            +
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium text-foreground">{item.name}</p>
+              </div>
+              {item.description && (
+                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                  {item.description}
+                </p>
+              )}
+              <div className="mt-2">
+                <Money
+                  amount={item.basePrice}
+                  currency={currency}
+                  className="text-sm font-semibold"
+                />
+              </div>
+            </div>
+            <div
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl font-bold",
+                available
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              )}
+              aria-hidden
+            >
+              +
+            </div>
+          </button>
+          <div className="w-full flex justify-end">
+            <AvailabilityPill available={available} locale={locale} className="w-fit" />
           </div>
-        </button>
+        </div>
+
       </div>
 
       {previewOpen ? (
