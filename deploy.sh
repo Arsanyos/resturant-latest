@@ -133,6 +133,7 @@ rsync_to_remote() {
     --exclude '.env.*' \
     --exclude '.deploy.env' \
     --exclude 'tsconfig.tsbuildinfo' \
+    --exclude 'public/uploads' \
     -e "ssh ${SSH_OPTS[*]}" \
     "$ROOT_DIR/" "$REMOTE:$APP_DIR/"
 }
@@ -270,6 +271,16 @@ cat > /etc/nginx/sites-available/${NGINX_SITE_NAME} <<NGINX
 server {
     listen 80;
     server_name ${APP_SERVER_NAME};
+
+    # Serve runtime uploads from disk. next start only serves public/
+    # files that existed when the process started, so new menu/branding
+    # images would 404 if proxied through Next.js.
+    location /uploads/ {
+        root ${APP_DIR}/public;
+        access_log off;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
 
     location /realtime {
         proxy_pass http://127.0.0.1:${WS_PORT}/realtime;
