@@ -26,6 +26,8 @@ type TenantDetailData = {
     tiktokUrl: string | null;
     telegramUrl: string | null;
     xUrl: string | null;
+    adImageUrl: string | null;
+    adRedirectUrl: string | null;
     createdAt: string;
     owner: {
       id: string;
@@ -58,7 +60,7 @@ type ActivityEntry = {
 const inputClass =
   "w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
-type Tab = "overview" | "branding" | "activity";
+type Tab = "overview" | "branding" | "adsense" | "activity";
 
 export function TenantDetail({ tenantId }: { tenantId: string }) {
   const [data, setData] = useState<TenantDetailData | null>(null);
@@ -126,18 +128,25 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
       </div>
 
       <div className="flex gap-2 border-b border-card-border">
-        {(["overview", "branding", "activity"] as Tab[]).map((item) => (
+        {(
+          [
+            { id: "overview" as const, label: "Overview" },
+            { id: "branding" as const, label: "Branding" },
+            { id: "adsense" as const, label: "Ad Sense" },
+            { id: "activity" as const, label: "Activity" },
+          ] as const
+        ).map((item) => (
           <button
-            key={item}
+            key={item.id}
             type="button"
-            onClick={() => setTab(item)}
-            className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
-              tab === item
+            onClick={() => setTab(item.id)}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              tab === item.id
                 ? "border-b-2 border-primary text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {item}
+            {item.label}
           </button>
         ))}
       </div>
@@ -146,6 +155,8 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
         <OverviewTab data={data} />
       ) : tab === "branding" ? (
         <BrandingTab tenant={tenant} onSaved={load} />
+      ) : tab === "adsense" ? (
+        <AdSenseTab tenant={tenant} onSaved={load} />
       ) : (
         <ActivityTab tenantId={tenantId} />
       )}
@@ -483,6 +494,202 @@ function BrandingTab({
       >
         {saving ? "Saving..." : "Save changes"}
       </button>
+    </div>
+  );
+}
+
+function AdSenseTab({
+  tenant,
+  onSaved,
+}: {
+  tenant: TenantDetailData["tenant"];
+  onSaved: () => void;
+}) {
+  const [adImageUrl, setAdImageUrl] = useState(tenant.adImageUrl ?? "");
+  const [adRedirectUrl, setAdRedirectUrl] = useState(tenant.adRedirectUrl ?? "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    tenant.adImageUrl
+  );
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function handleImageSelect(file: File | null) {
+    setImageFile(file);
+    setError(null);
+    if (!file) {
+      setPreviewUrl(adImageUrl || null);
+      return;
+    }
+    setPreviewUrl(URL.createObjectURL(file));
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`/api/platform/tenants/${tenant.id}/ads/upload`, {
+        method: "POST",
+        body: form,
+      });
+      const json = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok) {
+        throw new Error(json.error ?? "Upload failed");
+      }
+      setAdImageUrl(json.url ?? "");
+      setPreviewUrl(json.url ?? null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+      setPreviewUrl(adImageUrl || null);
+      setImageFile(null);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/platform/tenants/${tenant.id}/ads`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adImageUrl: adImageUrl || null,
+          adRedirectUrl: adRedirectUrl.trim() || null,
+        }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(json.error ?? "Failed to save");
+        return;
+      }
+      setMessage("Ad saved");
+      setImageFile(null);
+      onSaved();
+    } catch {
+      setError("Something went wrong");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function clearAd() {
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/platform/tenants/${tenant.id}/ads`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adImageUrl: null,
+          adRedirectUrl: null,
+        }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(json.error ?? "Failed to remove ad");
+        return;
+      }
+      setAdImageUrl("");
+      setAdRedirectUrl("");
+      setPreviewUrl(null);
+      setImageFile(null);
+      setMessage("Ad removed");
+      onSaved();
+    } catch {
+      setError("Something went wrong");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="max-w-2xl space-y-4">
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {message ? (
+        <p className="text-sm text-muted-foreground">{message}</p>
+      ) : null}
+
+      <AppCard className="space-y-4">
+        <div>
+          <h3 className="font-medium">Ad Sense banner</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Upload a banner image and set where customers go when they tap it.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            Banner image
+          </label>
+          {previewUrl ? (
+            <div className="overflow-hidden rounded-lg border border-card-border">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="Ad preview"
+                className="h-24 w-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-card-border bg-muted/30 text-sm text-muted-foreground">
+              No banner uploaded
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            disabled={uploading || saving}
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              void handleImageSelect(file);
+            }}
+            className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground"
+          />
+          {uploading ? (
+            <p className="text-xs text-muted-foreground">Uploading image...</p>
+          ) : null}
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-foreground">
+            Redirect link
+          </label>
+          <input
+            className={inputClass}
+            value={adRedirectUrl}
+            onChange={(e) => setAdRedirectUrl(e.target.value)}
+            placeholder="https://example.com/promo"
+          />
+          <p className="text-xs text-muted-foreground">
+            Customers will open this URL when they tap the banner.
+          </p>
+        </div>
+      </AppCard>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => save()}
+          disabled={saving || uploading}
+          className="rounded-pill bg-primary px-6 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+        >
+          {saving ? "Saving..." : "Save ad"}
+        </button>
+        {(adImageUrl || adRedirectUrl) && (
+          <button
+            type="button"
+            onClick={() => clearAd()}
+            disabled={saving || uploading}
+            className="rounded-pill border border-card-border px-6 py-3 font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
+          >
+            Remove ad
+          </button>
+        )}
+      </div>
     </div>
   );
 }

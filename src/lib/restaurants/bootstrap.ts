@@ -49,6 +49,8 @@ export async function getBootstrapData(
       currency: restaurant.currency,
       taxPct: Number(restaurant.taxPct),
       servicePct: Number(restaurant.servicePct),
+      adImageUrl: restaurant.adImageUrl,
+      adRedirectUrl: restaurant.adRedirectUrl,
     },
     table: {
       id: table.id,

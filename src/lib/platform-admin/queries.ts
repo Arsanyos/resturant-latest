@@ -216,6 +216,8 @@ export async function getTenantDetail(tenantId: string) {
       tiktokUrl: tenant.tiktokUrl,
       telegramUrl: tenant.telegramUrl,
       xUrl: tenant.xUrl,
+      adImageUrl: tenant.adImageUrl,
+      adRedirectUrl: tenant.adRedirectUrl,
       createdAt: tenant.createdAt.toISOString(),
       owner: tenant.staff[0]
         ? {

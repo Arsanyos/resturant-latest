@@ -79,3 +79,25 @@ export const resetTenantOwnerPasswordSchema = z.object({
 export type ResetTenantOwnerPasswordInput = z.infer<
   typeof resetTenantOwnerPasswordSchema
 >;
+
+// Accepts absolute URLs or local upload paths like /uploads/ads/...
+const optionalImagePath = z
+  .string()
+  .trim()
+  .refine(
+    (value) =>
+      value === "" ||
+      value.startsWith("/") ||
+      z.string().url().safeParse(value).success,
+    "Invalid image URL"
+  )
+  .or(z.literal(""))
+  .nullish()
+  .transform((value) => (value ? value : null));
+
+export const updateTenantAdSchema = z.object({
+  adImageUrl: optionalImagePath,
+  adRedirectUrl: optionalUrl,
+});
+
+export type UpdateTenantAdInput = z.infer<typeof updateTenantAdSchema>;

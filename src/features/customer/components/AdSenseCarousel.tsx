@@ -7,24 +7,31 @@ import { cn } from "@/lib/utils";
 
 const SLIDE_MS = 5000;
 
-export function AdSenseCarousel() {
+export function AdSenseCarousel({
+  adImageUrl,
+  adRedirectUrl,
+}: {
+  adImageUrl?: string | null;
+  adRedirectUrl?: string | null;
+}) {
   const slots = useMemo(() => getAdSlots(), []);
   const [index, setIndex] = useState(0);
   const clientId = slots.find((s) => s.clientId)?.clientId ?? "";
   const count = slots.length;
+  const hasTenantAd = !!adImageUrl;
 
   const goNext = useCallback(() => {
     setIndex((i) => (i + 1) % count);
   }, [count]);
 
   useEffect(() => {
-    if (count <= 1) return;
+    if (hasTenantAd || count <= 1) return;
     const timer = setInterval(goNext, SLIDE_MS);
     return () => clearInterval(timer);
-  }, [count, goNext]);
+  }, [count, goNext, hasTenantAd]);
 
   useEffect(() => {
-    if (!clientId) return;
+    if (hasTenantAd || !clientId) return;
     try {
       const w = window as Window & { adsbygoogle?: unknown[] };
       w.adsbygoogle = w.adsbygoogle || [];
@@ -32,7 +39,42 @@ export function AdSenseCarousel() {
     } catch {
       // AdSense may reject duplicate pushes in strict mode
     }
-  }, [index, clientId]);
+  }, [index, clientId, hasTenantAd]);
+
+  if (hasTenantAd) {
+    const banner = (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={adImageUrl}
+        alt="Advertisement"
+        className="h-full w-full object-cover"
+      />
+    );
+
+    return (
+      <section
+        className="relative overflow-hidden border-b border-card-border bg-muted/30"
+        aria-label="Advertisement"
+      >
+        <div className="flex h-20 w-full items-center justify-center px-4">
+          {adRedirectUrl ? (
+            <a
+              href={adRedirectUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block h-full w-full max-w-3xl overflow-hidden rounded-lg"
+            >
+              {banner}
+            </a>
+          ) : (
+            <div className="h-full w-full max-w-3xl overflow-hidden rounded-lg">
+              {banner}
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   if (count === 0) return null;
 
